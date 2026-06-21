@@ -132,11 +132,14 @@ const CFG = {
   restY:3.8, grabY:0.55, topY:5.2,        // 집게 높이
   grabRadius:0.62,                        // 집기 반경
   pinchThreshold:0.55,                    // 핀치 민감도(작을수록 더 꽉 쥐어야 함)
-  boxX:-3.1, boxHalf:1.05, boxWallH:1.25, // 수거 박스
-  trayX:[-1.0,3.6], trayZ:[-1.9,1.9],     // 인형 더미 영역
+  boxX:-3.1, boxHalf:1.05, boxWallH:2.0,  // 수거 박스 (벽 높임 → 안 튀어나옴)
+  trayX:[0.2,3.2], trayZ:[-1.6,1.6],       // 인형 더미 영역 (집게 도달범위 clawX/clawZ 안에 포함)
   nBalls:26,
   // 보조
-  handMargin:0.16,                        // 손 인식 영역 여백(가장자리까지 안 가도 끝까지 닿게)
+  handMargin:0.16,                        // 손 인식 영역 여백(x축)
+  handYRange:[0.25, 0.78],                // 손 y의 중앙 밴드 → clawZ 전체로 정규화(z 게인↑)
+  invertZ:false,                          // z 방향 직관 안 맞으면 true
+  zSmooth:0.35,                           // z 저역통과(작을수록 더 부드럽고 느림)
   lerpXZ:0.22, lerpY:0.12, lerpOpen:0.18, // 부드러움
   ceilingY:6.9
 };
@@ -241,8 +244,8 @@ world.allowSleep = true;
 
 const matGround = new CANNON.Material('ground');
 const matBall   = new CANNON.Material('ball');
-world.addContactMaterial(new CANNON.ContactMaterial(matGround, matBall, {friction:0.4, restitution:0.25}));
-world.addContactMaterial(new CANNON.ContactMaterial(matBall, matBall,   {friction:0.32, restitution:0.18}));
+world.addContactMaterial(new CANNON.ContactMaterial(matGround, matBall, {friction:0.5, restitution:0.05}));
+world.addContactMaterial(new CANNON.ContactMaterial(matBall, matBall,   {friction:0.4,  restitution:0.05}));
 
 // 바닥
 const groundBody = new CANNON.Body({mass:0, material:matGround, shape:new CANNON.Plane()});
@@ -254,11 +257,13 @@ function staticBox(hx,hy,hz,x,y,z){
   const b = new CANNON.Body({mass:0, material:matGround, shape:new CANNON.Box(new CANNON.Vec3(hx,hy,hz))});
   b.position.set(x,y,z); world.addBody(b); return b;
 }
-// 수거 박스 물리벽
-staticBox(bt/2, bw/2, bh+bt, CFG.boxX-bh-bt/2, bw/2, 0);
-staticBox(bt/2, bw/2, bh+bt, CFG.boxX+bh+bt/2, bw/2, 0);
-staticBox(bh+bt, bw/2, bt/2, CFG.boxX, bw/2, -bh-bt/2);
-staticBox(bh+bt, bw/2, bt/2, CFG.boxX, bw/2, bh+bt/2);
+// 수거 박스 물리벽 — 시각벽 안쪽면에 정렬 + 두껍게(인형 터널링 방지) + 높이=boxWallH
+const WT = 0.25;          // 물리벽 반두께(시각벽보다 두꺼워 안 뚫림, 바깥쪽으로만 확장)
+const WH = bw/2;          // 물리벽 반높이 (= boxWallH/2)
+staticBox(WT, WH, bh+WT, CFG.boxX-bh-WT, WH, 0);   // left  (안쪽면 x=boxX-bh)
+staticBox(WT, WH, bh+WT, CFG.boxX+bh+WT, WH, 0);   // right (안쪽면 x=boxX+bh)
+staticBox(bh+WT, WH, WT, CFG.boxX, WH, -bh-WT);    // back  (안쪽면 z=-bh)
+staticBox(bh+WT, WH, WT, CFG.boxX, WH, bh+WT);     // front (안쪽면 z=+bh)
 
 // 인형 더미 영역 보이지 않는 둘레벽 (구슬 가둠)
 const tWallH = 2.0;
@@ -342,25 +347,28 @@ const claw = new THREE.Group(); scene.add(claw);
 const goldMat = new THREE.MeshStandardMaterial({color:0xffcf5a, roughness:0.28, metalness:0.95});
 const goldDark = new THREE.MeshStandardMaterial({color:0xd9a533, roughness:0.35, metalness:0.9});
 
-// 허브
-const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.32,0.3,20), goldMat);
-hub.castShadow = true; claw.add(hub);
-const cap = new THREE.Mesh(new THREE.SphereGeometry(0.18,16,12), goldDark);
-cap.position.y = 0.2; claw.add(cap);
+// 허브 — 컴팩트한 둥근 허브 (납작한 원반 X → 중앙 흰 사각형 반사 제거)
+const hub = new THREE.Mesh(new THREE.SphereGeometry(0.2, 22, 16), goldMat);
+hub.scale.set(1, 0.78, 1); hub.castShadow = true; claw.add(hub);
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.085, 0.2, 12), goldDark);
+neck.position.y = 0.17; claw.add(neck);
 
-// 프롱 3개 (Y회전 피벗 → opener(Z회전) → blade)
+// 프롱 3개 — 허브 가장자리에 힌지, 아래로 늘어뜨려 끝이 안쪽으로 꺾인 갈고리(2 segment)
+// 구조: pivot(Y회전 120°씩) → opener(Z회전=개폐, 힌지=허브 가장자리) → upper(직선) + hook(안쪽 갈고리)
 const openers = [];
 for(let i=0;i<3;i++){
   const pivot = new THREE.Object3D();
   pivot.rotation.y = i*Math.PI*2/3;
   const opener = new THREE.Object3D();
+  opener.position.set(0.13, 0.0, 0);     // 힌지: 허브 가장자리
   pivot.add(opener);
-  // blade: 두 마디
-  const upper = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.5,0.14), goldMat);
-  upper.position.set(0.12,-0.25,0); upper.castShadow = true;
-  const tip = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.34,0.12), goldDark);
-  tip.position.set(0.04,-0.62,0); tip.rotation.z = 0.5; tip.castShadow = true;
-  opener.add(upper); opener.add(tip);
+  // 위 마디: 곧게 아래로
+  const upper = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.1), goldMat);
+  upper.position.set(0, -0.21, 0); upper.castShadow = true;
+  // 아래 마디(갈고리): 안쪽(-x)으로 꺾임
+  const hook = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.26, 0.09), goldDark);
+  hook.position.set(-0.05, -0.5, 0); hook.rotation.z = -0.95; hook.castShadow = true;
+  opener.add(upper); opener.add(hook);
   claw.add(pivot);
   openers.push(opener);
 }
@@ -392,6 +400,7 @@ claw.position.set(0, CFG.restY, 0);
 const input = { x:0, z:0, pinch:false, has:false };
 let mode = 'mouse';     // 'cam' | 'mouse'
 let lastHandTs = 0;
+let smoothZ = 0, smoothZInit = false;   // z 저역통과 상태
 
 function clampClaw(x,z){
   return [
@@ -447,11 +456,14 @@ function onHands(results){
   const p0=lm[0], p9=lm[9], p4=lm[4], p8=lm[8];
   // 미러: 화면(셀피)과 손 좌우 일치하도록 x 반전
   const nx = remap01(1 - p9.x, CFG.handMargin);
-  const nz = remap01(p9.y,     CFG.handMargin);
+  let nz = THREE.MathUtils.clamp((p9.y - CFG.handYRange[0]) / (CFG.handYRange[1] - CFG.handYRange[0]), 0, 1);
+  if(CFG.invertZ) nz = 1 - nz;
   const cx = THREE.MathUtils.lerp(CFG.clawX[0], CFG.clawX[1], nx);
   const cz = THREE.MathUtils.lerp(CFG.clawZ[0], CFG.clawZ[1], nz);
   const [ccx,ccz] = clampClaw(cx,cz);
-  input.x = ccx; input.z = ccz; input.has = true;
+  if(!smoothZInit){ smoothZ = ccz; smoothZInit = true; }
+  smoothZ += (ccz - smoothZ) * CFG.zSmooth;   // z 저역통과
+  input.x = ccx; input.z = smoothZ; input.has = true;
   // 핀치 = dist(4,8)/handSize < threshold
   const handSize = Math.hypot(p0.x-p9.x, p0.y-p9.y) || 1e-3;
   const pinchDist = Math.hypot(p4.x-p8.x, p4.y-p8.y);
@@ -505,7 +517,7 @@ let state = 'idle';
 let openAmount = 1;          // 1 열림, 0 닫힘
 let held = null;            // doll
 let grabPos = new THREE.Vector3();   // 핀치 시작 시 고정 XZ
-const OPEN_CLOSED = -0.12, OPEN_OPEN = 0.62;
+const OPEN_CLOSED = 0.087, OPEN_OPEN = 0.489;   // 닫힘 ~5°(끝 모임), 열림 ~28°(적당히)
 
 function tryGrab(){
   let best=null, bestD=CFG.grabRadius;
@@ -527,11 +539,19 @@ function dropHeld(){
   const inBoxZ = Math.abs(cz) < CFG.boxHalf;
   const d = held; held = null;
   d.body.wakeUp();
-  d.body.velocity.set(0,0,0);
-  d.body.angularVelocity.set((Math.random()-0.5)*2,0,(Math.random()-0.5)*2);
+  d.body.velocity.set(0,-0.5,0);
+  d.body.angularVelocity.set(0,0,0);
   if(inBoxX && inBoxZ){
     score++; updateScore();
-    d.body.position.set(CFG.boxX+(Math.random()-0.5)*0.5, CFG.boxWallH*0.6, (Math.random()-0.5)*0.5);
+    // 수거된 인형 = 박스 안 격자 슬롯에 STATIC 고정 → 서로 안 밀치고 절대 안 튀어나감
+    const n = score-1, slot = n % 4, layer = Math.floor(n/4);
+    const sx = (slot % 2) ? 0.52 : -0.52;
+    const sz = (slot < 2) ? -0.52 : 0.52;
+    d.body.type = CANNON.Body.STATIC;
+    d.body.mass = 0; d.body.updateMassProperties();
+    d.body.velocity.set(0,0,0); d.body.angularVelocity.set(0,0,0);
+    d.body.position.set(CFG.boxX + sx, d.r + layer*0.92, sz);
+    d.body.quaternion.set(0,0,0,1);
     toast('성공! 🎉  +1', 'ok', 1500);
     burst();
   }else{
