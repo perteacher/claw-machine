@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>손인형뽑기 · Hand Claw Machine</title>
+<style>
+  :root{
+    --glass: rgba(20,24,38,0.55);
+    --glass-bd: rgba(255,255,255,0.14);
+    --txt: #eef1ff;
+    --accent: #7ef0c0;
+    --gold: #ffd56b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;width:100%;overflow:hidden;background:#05060c;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
+
+  /* ---------- HUD ---------- */
+  .hud{position:fixed;z-index:20;pointer-events:none}
+  #counter{top:max(14px,env(safe-area-inset-top));left:14px;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:10px 16px;border-radius:16px;font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+  #counter b{color:var(--accent);font-size:20px;font-variant-numeric:tabular-nums}
+  #counter .ic{font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+
+  #hint{left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:9px 16px;border-radius:14px;font-size:13px;opacity:.92;text-align:center;line-height:1.5;
+    max-width:92vw}
+  #hint .k{color:var(--gold);font-weight:700}
+
+  #toast{left:50%;top:74px;transform:translate(-50%,-12px);
+    padding:11px 22px;border-radius:14px;font-weight:800;font-size:17px;letter-spacing:.3px;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    opacity:0;transition:opacity .25s ease, transform .25s ease;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #toast.ok{color:#0c1410;background:linear-gradient(135deg,#9ff7cf,#5fd3a4);border-color:#bfffe4}
+  #toast.bad{color:#fff;background:linear-gradient(135deg,#ff8a8a,#e85b6a);border-color:#ffc9c9}
+  #toast.info{color:var(--txt)}
+
+  /* top-right mode toggle */
+  #modeBtn{top:max(14px,env(safe-area-inset-top));right:14px;pointer-events:auto;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    color:var(--txt);padding:9px 13px;border-radius:14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;
+    box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #modeBtn:active{transform:scale(.96)}
+
+  /* webcam preview */
+  #preview{position:fixed;right:14px;bottom:max(14px,env(safe-area-inset-bottom));z-index:21;
+    width:160px;height:120px;border-radius:14px;overflow:hidden;display:none;
+    border:1px solid var(--glass-bd);box-shadow:0 8px 30px rgba(0,0,0,.5);background:#000}
+  #preview.on{display:block}
+  #preview video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  #preview .lbl{position:absolute;left:8px;top:6px;font-size:10px;font-weight:700;opacity:.85;
+    background:rgba(0,0,0,.4);padding:2px 7px;border-radius:8px}
+  @media (max-width:520px){ #preview{width:120px;height:90px} }
+
+  /* ---------- start overlay ---------- */
+  #overlay{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:26px;padding:24px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 20%, rgba(40,30,70,.55), rgba(4,5,12,.92) 70%);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #overlay h1{font-size:clamp(26px,7vw,44px);font-weight:900;letter-spacing:-.5px;
+    background:linear-gradient(135deg,#ffd56b,#ff9ecb 45%,#7ef0c0);-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 6px 30px rgba(255,160,200,.15)}
+  #overlay p.sub{opacity:.8;font-size:clamp(13px,3.5vw,16px);max-width:34ch;line-height:1.6}
+  .btns{display:flex;flex-direction:column;gap:14px;width:min(340px,86vw)}
+  .btn{pointer-events:auto;cursor:pointer;border:1px solid var(--glass-bd);border-radius:18px;
+    padding:18px 20px;font-size:17px;font-weight:800;color:var(--txt);display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:transform .12s ease, box-shadow .2s ease}
+  .btn:active{transform:scale(.97)}
+  .btn.cam{background:linear-gradient(135deg,#6c8cff,#9b6bff);box-shadow:0 12px 40px rgba(120,110,255,.4)}
+  .btn.mouse{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .btn .em{font-size:20px}
+  #overlay .note{font-size:11.5px;opacity:.55;max-width:36ch;line-height:1.5}
+  #loading{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;
+    background:rgba(4,5,12,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #loading.on{display:flex}
+  .spin{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.15);border-top-color:var(--accent);
+    animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- HUD -->
+<div id="counter" class="hud"><span class="ic">🧸</span> 담은 인형 <b id="score">0</b></div>
+<button id="modeBtn" class="hud">🖐 <span id="modeLbl">모드</span></button>
+<div id="hint" class="hud"></div>
+<div id="toast" class="hud"></div>
+
+<div id="preview"><span class="lbl">CAM</span><video id="video" playsinline muted></video></div>
+
+<!-- start overlay -->
+<div id="overlay">
+  <h1>손인형뽑기</h1>
+  <p class="sub">웹캠으로 손을 인식해 크레인을 조종해요.<br>손을 <b>쥐면</b> 집게가 내려가 인형을 집고, <b>펴면</b> 놓아요.<br>왼쪽 나무 박스에 넣으면 성공! 🎉</p>
+  <div class="btns">
+    <button class="btn cam" id="startCam"><span class="em">📷</span> 카메라로 시작</button>
+    <button class="btn mouse" id="startMouse"><span class="em">🖱️</span> 마우스·터치로 시작</button>
+  </div>
+  <p class="note">카메라는 HTTPS(또는 localhost)에서만 작동해요. 권한을 거부하면 자동으로 마우스 모드로 전환됩니다.</p>
+</div>
+
+<div id="loading"><div class="spin"></div><div>카메라 준비 중…</div></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import * as CANNON from 'cannon-es';
+
+/* ============================================================
+   CFG — 튜닝 상수
+   ============================================================ */
+const CFG = {
+  clawX:[-3.5, 3.3], clawZ:[-1.7, 1.7],   // 집게 이동 범위
+  restY:3.8, grabY:0.55, topY:5.2,        // 집게 높이
+  grabRadius:0.62,                        // 집기 반경
+  pinchThreshold:0.55,                    // 핀치 민감도(작을수록 더 꽉 쥐어야 함)
+  boxX:-3.1, boxHalf:1.05, boxWallH:1.25, // 수거 박스
+  trayX:[-1.0,3.6], trayZ:[-1.9,1.9],     // 인형 더미 영역
+  nBalls:26,
+  // 보조
+  handMargin:0.16,                        // 손 인식 영역 여백(가장자리까지 안 가도 끝까지 닿게)
+  lerpXZ:0.22, lerpY:0.12, lerpOpen:0.18, // 부드러움
+  ceilingY:6.9
+};
+
+/* ============================================================
+   기본 three 세팅
+   ============================================================ */
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // dpr 2 캡
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07080f);
+scene.fog = new THREE.Fog(0x07080f, 13, 30);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.1, 100);
+function placeCamera(){
+  // 모바일 세로에선 살짝 더 멀리/위에서
+  const portrait = innerHeight > innerWidth;
+  camera.position.set(0.4, portrait?8.2:6.6, portrait?12.5:9.6);
+  camera.lookAt(0, 1.1, 0);
+}
+placeCamera();
+
+/* ---------- 조명 ---------- */
+scene.add(new THREE.AmbientLight(0x4a4f7a, 0.7));
+const hemi = new THREE.HemisphereLight(0x8aa0ff, 0x20141a, 0.5);
+scene.add(hemi);
+
+const key = new THREE.SpotLight(0xfff2d6, 90, 40, Math.PI/4.2, 0.4, 1.2);
+key.position.set(3.5, 11, 6);
+key.target.position.set(0, 0, 0);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 2; key.shadow.camera.far = 30;
+key.shadow.bias = -0.0004;
+scene.add(key, key.target);
+
+const fill = new THREE.PointLight(0xff7bd0, 14, 22, 2);
+fill.position.set(-5, 4.5, 4);
+scene.add(fill);
+const fill2 = new THREE.PointLight(0x6bb7ff, 12, 22, 2);
+fill2.position.set(5, 4, -2);
+scene.add(fill2);
+
+/* ============================================================
+   방: 바닥 + 뒷벽
+   ============================================================ */
+const floorMat = new THREE.MeshStandardMaterial({color:0x14161f, roughness:0.95, metalness:0.05});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40,40), floorMat);
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
+scene.add(floor);
+
+const wallMat = new THREE.MeshStandardMaterial({color:0x0d0f18, roughness:1, metalness:0});
+const backWall = new THREE.Mesh(new THREE.PlaneGeometry(40,18), wallMat);
+backWall.position.set(0,9,-5); backWall.receiveShadow = true;
+scene.add(backWall);
+const sideWall = new THREE.Mesh(new THREE.PlaneGeometry(40,18), wallMat);
+sideWall.rotation.y = Math.PI/2; sideWall.position.set(-9,9,0);
+scene.add(sideWall);
+
+/* ============================================================
+   수거 박스 (나무) — 바닥 + 4벽, 윗면 열림
+   ============================================================ */
+const woodMat = new THREE.MeshStandardMaterial({color:0x8a5a2b, roughness:0.8, metalness:0.05});
+const woodMat2 = new THREE.MeshStandardMaterial({color:0x6f4520, roughness:0.85, metalness:0.05});
+const box = new THREE.Group(); scene.add(box);
+const bh = CFG.boxHalf, bw = CFG.boxWallH, bt = 0.12;
+function woodWall(w,h,d,x,y,z,m){const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m||woodMat);
+  me.position.set(x,y,z);me.castShadow=true;me.receiveShadow=true;return me;}
+// 바닥
+box.add(woodWall(bh*2+bt*2, bt, bh*2+bt*2, CFG.boxX, bt/2, 0, woodMat2));
+// 벽 4
+box.add(woodWall(bt, bw, bh*2+bt*2, CFG.boxX-bh-bt/2, bw/2, 0));        // left
+box.add(woodWall(bt, bw, bh*2+bt*2, CFG.boxX+bh+bt/2, bw/2, 0));        // right
+box.add(woodWall(bh*2+bt*2, bw, bt, CFG.boxX, bw/2, -bh-bt/2));         // back
+box.add(woodWall(bh*2+bt*2, bw, bt, CFG.boxX, bw/2, bh+bt/2));          // front
+
+// 발광 초록 링 (박스 바닥)
+const ringMat = new THREE.MeshStandardMaterial({color:0x0c2018, emissive:0x33ff99, emissiveIntensity:1.4, roughness:0.4});
+const ring = new THREE.Mesh(new THREE.TorusGeometry(bh*0.66, 0.05, 16, 48), ringMat);
+ring.rotation.x = Math.PI/2; ring.position.set(CFG.boxX, bt+0.06, 0);
+box.add(ring);
+const ringGlow = new THREE.PointLight(0x33ff99, 6, 4, 2);
+ringGlow.position.set(CFG.boxX, 0.5, 0); box.add(ringGlow);
+
+/* ============================================================
+   물리 세계 (cannon-es)
+   ============================================================ */
+const world = new CANNON.World({gravity:new CANNON.Vec3(0,-18,0)});
+world.solver.iterations = 24;
+world.solver.tolerance = 0.001;
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.allowSleep = true;
+
+const matGround = new CANNON.Material('ground');
+const matBall   = new CANNON.Material('ball');
+world.addContactMaterial(new CANNON.ContactMaterial(matGround, matBall, {friction:0.4, restitution:0.25}));
+world.addContactMaterial(new CANNON.ContactMaterial(matBall, matBall,   {friction:0.32, restitution:0.18}));
+
+// 바닥
+const groundBody = new CANNON.Body({mass:0, material:matGround, shape:new CANNON.Plane()});
+groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
+world.addBody(groundBody);
+
+// 정적 벽 헬퍼
+function staticBox(hx,hy,hz,x,y,z){
+  const b = new CANNON.Body({mass:0, material:matGround, shape:new CANNON.Box(new CANNON.Vec3(hx,hy,hz))});
+  b.position.set(x,y,z); world.addBody(b); return b;
+}
+// 수거 박스 물리벽
+staticBox(bt/2, bw/2, bh+bt, CFG.boxX-bh-bt/2, bw/2, 0);
+staticBox(bt/2, bw/2, bh+bt, CFG.boxX+bh+bt/2, bw/2, 0);
+staticBox(bh+bt, bw/2, bt/2, CFG.boxX, bw/2, -bh-bt/2);
+staticBox(bh+bt, bw/2, bt/2, CFG.boxX, bw/2, bh+bt/2);
+
+// 인형 더미 영역 보이지 않는 둘레벽 (구슬 가둠)
+const tWallH = 2.0;
+const tx0=CFG.trayX[0], tx1=CFG.trayX[1], tz0=CFG.trayZ[0], tz1=CFG.trayZ[1];
+const tcx=(tx0+tx1)/2, tcz=(tz0+tz1)/2, thx=(tx1-tx0)/2, thz=(tz1-tz0)/2;
+staticBox(0.1, tWallH/2, thz+0.2, tx0-0.1, tWallH/2, tcz); // left
+staticBox(0.1, tWallH/2, thz+0.2, tx1+0.1, tWallH/2, tcz); // right
+staticBox(thx+0.2, tWallH/2, 0.1, tcx, tWallH/2, tz0-0.1); // back
+staticBox(thx+0.2, tWallH/2, 0.1, tcx, tWallH/2, tz1+0.1); // front
+
+/* ============================================================
+   플러시 인형 ~26개
+   ============================================================ */
+const CANDY = [0xff7eb6,0xffd166,0x8ad7ff,0xb6f06a,0xc89bff,0xffa45c,0xff9ecb,0x7ef0c0,0xffe28a,0x9bb8ff];
+const dolls = [];   // {mesh, body, r}
+const eyeMat = new THREE.MeshStandardMaterial({color:0x101015, roughness:0.4});
+const eyeWhiteMat = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.5});
+
+function makeDoll(r, color){
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({color, roughness:0.62, metalness:0.0});
+  const bodyMesh = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 22), bodyMat);
+  bodyMesh.castShadow = true; bodyMesh.receiveShadow = true;
+  g.add(bodyMesh);
+  // 눈 2개 (앞면 = +Z)
+  const er = r*0.13;
+  for(const sx of [-1,1]){
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(er, 12, 12), eyeMat);
+    eye.position.set(sx*r*0.32, r*0.16, r*0.9);
+    g.add(eye);
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(er*0.4, 8, 8), eyeWhiteMat);
+    hl.position.set(sx*r*0.32 + er*0.3, r*0.16 + er*0.3, r*0.92);
+    g.add(hl);
+  }
+  // 일부는 귀
+  if(Math.random() < 0.45){
+    const earR = r*0.34;
+    for(const sx of [-1,1]){
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(earR, 14, 12), bodyMat);
+      ear.position.set(sx*r*0.62, r*0.78, 0);
+      ear.scale.set(0.8,1,0.7);
+      ear.castShadow = true;
+      g.add(ear);
+    }
+  }
+  scene.add(g);
+  return g;
+}
+
+function spawnDolls(){
+  for(let i=0;i<CFG.nBalls;i++){
+    const r = 0.30 + Math.random()*0.16;          // 0.30 ~ 0.46
+    const color = CANDY[Math.floor(Math.random()*CANDY.length)];
+    const mesh = makeDoll(r, color);
+    const body = new CANNON.Body({
+      mass:1.0, material:matBall,
+      shape:new CANNON.Sphere(r),
+      linearDamping:0.25, angularDamping:0.55,
+      allowSleep:true, sleepSpeedLimit:0.25, sleepTimeLimit:0.4
+    });
+    const x = THREE.MathUtils.lerp(tx0+r, tx1-r, Math.random());
+    const z = THREE.MathUtils.lerp(tz0+r, tz1-r, Math.random());
+    body.position.set(x, 0.6 + (i%6)*0.5 + Math.random()*0.4, z);
+    world.addBody(body);
+    dolls.push({mesh, body, r});
+  }
+}
+spawnDolls();
+
+function respawnDoll(d){
+  d.body.wakeUp();
+  d.body.velocity.set(0,0,0);
+  d.body.angularVelocity.set(0,0,0);
+  d.body.position.set(tcx + (Math.random()-0.5)*1.4, 4.5, tcz + (Math.random()-0.5)*1.4);
+}
+
+/* ============================================================
+   금색 크레인 집게
+   ============================================================ */
+const claw = new THREE.Group(); scene.add(claw);
+const goldMat = new THREE.MeshStandardMaterial({color:0xffcf5a, roughness:0.28, metalness:0.95});
+const goldDark = new THREE.MeshStandardMaterial({color:0xd9a533, roughness:0.35, metalness:0.9});
+
+// 허브
+const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.32,0.3,20), goldMat);
+hub.castShadow = true; claw.add(hub);
+const cap = new THREE.Mesh(new THREE.SphereGeometry(0.18,16,12), goldDark);
+cap.position.y = 0.2; claw.add(cap);
+
+// 프롱 3개 (Y회전 피벗 → opener(Z회전) → blade)
+const openers = [];
+for(let i=0;i<3;i++){
+  const pivot = new THREE.Object3D();
+  pivot.rotation.y = i*Math.PI*2/3;
+  const opener = new THREE.Object3D();
+  pivot.add(opener);
+  // blade: 두 마디
+  const upper = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.5,0.14), goldMat);
+  upper.position.set(0.12,-0.25,0); upper.castShadow = true;
+  const tip = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.34,0.12), goldDark);
+  tip.position.set(0.04,-0.62,0); tip.rotation.z = 0.5; tip.castShadow = true;
+  opener.add(upper); opener.add(tip);
+  claw.add(pivot);
+  openers.push(opener);
+}
+
+// 케이블 (천장 → 허브)
+const cableMat = new THREE.MeshStandardMaterial({color:0x2a2d3a, roughness:0.7, metalness:0.4});
+const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1,8), cableMat);
+scene.add(cable);
+const ceilMount = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.18,0.5), goldDark);
+ceilMount.position.set(0, CFG.ceilingY, 0); scene.add(ceilMount);
+
+function updateCable(){
+  const topP = new THREE.Vector3(claw.position.x, CFG.ceilingY, claw.position.z);
+  const botP = new THREE.Vector3(claw.position.x, claw.position.y+0.2, claw.position.z);
+  const mid = topP.clone().add(botP).multiplyScalar(0.5);
+  const len = topP.distanceTo(botP);
+  cable.position.copy(mid);
+  cable.scale.y = len;
+  cable.lookAt(topP);               // align +Y? cylinder default axis is Y
+  cable.rotateX(Math.PI/2);         // lookAt aligns -Z; correct cylinder to span
+  ceilMount.position.set(claw.position.x, CFG.ceilingY, claw.position.z);
+}
+
+claw.position.set(0, CFG.restY, 0);
+
+/* ============================================================
+   입력 (손 / 마우스·터치 공용)
+   ============================================================ */
+const input = { x:0, z:0, pinch:false, has:false };
+let mode = 'mouse';     // 'cam' | 'mouse'
+let lastHandTs = 0;
+
+function clampClaw(x,z){
+  return [
+    THREE.MathUtils.clamp(x, CFG.clawX[0], CFG.clawX[1]),
+    THREE.MathUtils.clamp(z, CFG.clawZ[0], CFG.clawZ[1])
+  ];
+}
+
+/* ---------- 마우스 / 터치 ---------- */
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0,1,0), -CFG.grabY); // 인형 높이 평면 → 클릭한 인형 위로 집게 이동
+const hitPt = new THREE.Vector3();
+
+function pointerToClaw(clientX, clientY){
+  ndc.x = (clientX/innerWidth)*2 - 1;
+  ndc.y = -(clientY/innerHeight)*2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  if(raycaster.ray.intersectPlane(dragPlane, hitPt)){
+    const [cx,cz] = clampClaw(hitPt.x, hitPt.z);
+    input.x = cx; input.z = cz; input.has = true;
+  }
+}
+function onPointerDown(e){ if(mode!=='mouse') return; pointerToClaw(e.clientX,e.clientY); input.pinch = true; }
+function onPointerMove(e){ if(mode!=='mouse') return; if(e.pressure===0 && e.pointerType==='touch' && !input.pinch) {} pointerToClaw(e.clientX,e.clientY); }
+function onPointerUp(){ if(mode!=='mouse') return; input.pinch = false; }
+renderer.domElement.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+window.addEventListener('pointercancel', onPointerUp);
+
+/* ---------- MediaPipe Hands (lazy load) ---------- */
+const videoEl = document.getElementById('video');
+const previewEl = document.getElementById('preview');
+let mpHands = null, mpCamera = null, camActive = false;
+
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src=src; s.crossOrigin='anonymous';
+    s.onload=res; s.onerror=()=>rej(new Error('load fail: '+src)); document.head.appendChild(s);
+  });
+}
+
+function remap01(v, margin){
+  // [margin, 1-margin] → [0,1]
+  return THREE.MathUtils.clamp((v - margin)/(1 - 2*margin), 0, 1);
+}
+
+function onHands(results){
+  const list = results.multiHandLandmarks;
+  if(!list || !list.length){ return; }
+  const lm = list[0];
+  const p0=lm[0], p9=lm[9], p4=lm[4], p8=lm[8];
+  // 미러: 화면(셀피)과 손 좌우 일치하도록 x 반전
+  const nx = remap01(1 - p9.x, CFG.handMargin);
+  const nz = remap01(p9.y,     CFG.handMargin);
+  const cx = THREE.MathUtils.lerp(CFG.clawX[0], CFG.clawX[1], nx);
+  const cz = THREE.MathUtils.lerp(CFG.clawZ[0], CFG.clawZ[1], nz);
+  const [ccx,ccz] = clampClaw(cx,cz);
+  input.x = ccx; input.z = ccz; input.has = true;
+  // 핀치 = dist(4,8)/handSize < threshold
+  const handSize = Math.hypot(p0.x-p9.x, p0.y-p9.y) || 1e-3;
+  const pinchDist = Math.hypot(p4.x-p8.x, p4.y-p8.y);
+  input.pinch = (pinchDist/handSize) < CFG.pinchThreshold;
+  lastHandTs = performance.now();
+}
+
+async function startCameraMode(){
+  document.getElementById('loading').classList.add('on');
+  try{
+    if(!mpHands){
+      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js');
+      mpHands = new window.Hands({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`});
+      mpHands.setOptions({maxNumHands:1, modelComplexity:0, minDetectionConfidence:0.6, minTrackingConfidence:0.6});
+      mpHands.onResults(onHands);
+    }
+    mpCamera = new window.Camera(videoEl, {
+      onFrame: async()=>{ if(camActive) await mpHands.send({image:videoEl}); },
+      width:640, height:480
+    });
+    await mpCamera.start();   // getUserMedia 권한 요청 → 거부 시 throw
+    camActive = true;
+    mode = 'cam';
+    previewEl.classList.add('on');
+    setModeLabel();
+    toast('카메라 모드 · 손을 펴고 움직여보세요 ✋', 'info', 2600);
+  }catch(err){
+    console.warn('camera failed → mouse fallback', err);
+    mode = 'mouse';
+    previewEl.classList.remove('on');
+    camActive = false;
+    setModeLabel();
+    toast('카메라를 쓸 수 없어 마우스 모드로 전환했어요', 'bad', 3200);
+  }finally{
+    document.getElementById('loading').classList.remove('on');
+  }
+}
+function stopCameraMode(){
+  camActive = false;
+  previewEl.classList.remove('on');
+  try{ mpCamera && mpCamera.stop && mpCamera.stop(); }catch(e){}
+  const tr = videoEl.srcObject; if(tr){ tr.getTracks().forEach(t=>t.stop()); videoEl.srcObject=null; }
+}
+
+/* ============================================================
+   잡기 상태머신
+   idle → descend → close → ascend → hold → open → idle
+   ============================================================ */
+let state = 'idle';
+let openAmount = 1;          // 1 열림, 0 닫힘
+let held = null;            // doll
+let grabPos = new THREE.Vector3();   // 핀치 시작 시 고정 XZ
+const OPEN_CLOSED = -0.12, OPEN_OPEN = 0.62;
+
+function tryGrab(){
+  let best=null, bestD=CFG.grabRadius;
+  const cx=claw.position.x, cz=claw.position.z;
+  for(const d of dolls){
+    if(d===held) continue;
+    const p=d.body.position;
+    const dist = Math.hypot(p.x-cx, p.z-cz);
+    const dy = Math.abs(p.y - CFG.grabY);
+    if(dist < bestD && dy < 1.2){ bestD=dist; best=d; }
+  }
+  if(best){ held=best; best.body.sleep(); }
+}
+
+function dropHeld(){
+  if(!held) return;
+  const cx=claw.position.x, cz=claw.position.z;
+  const inBoxX = Math.abs(cx - CFG.boxX) < CFG.boxHalf;
+  const inBoxZ = Math.abs(cz) < CFG.boxHalf;
+  const d = held; held = null;
+  d.body.wakeUp();
+  d.body.velocity.set(0,0,0);
+  d.body.angularVelocity.set((Math.random()-0.5)*2,0,(Math.random()-0.5)*2);
+  if(inBoxX && inBoxZ){
+    score++; updateScore();
+    d.body.position.set(CFG.boxX+(Math.random()-0.5)*0.5, CFG.boxWallH*0.6, (Math.random()-0.5)*0.5);
+    toast('성공! 🎉  +1', 'ok', 1500);
+    burst();
+  }else{
+    toast('실패 😅 다시 도전!', 'bad', 1500);
+  }
+}
+
+/* 상태 전이 */
+function updateState(){
+  switch(state){
+    case 'idle':
+      if(input.pinch){ grabPos.set(input.x, 0, input.z); state='descend'; }
+      break;
+    case 'descend':
+      if(!input.pinch){ state='ascend'; break; }            // 중도 취소
+      if(claw.position.y < CFG.grabY + 0.12){ state='close'; }
+      break;
+    case 'close':
+      if(openAmount < 0.18){ tryGrab(); state='ascend'; }
+      break;
+    case 'ascend':
+      if(claw.position.y > CFG.topY - 0.12){ state = held ? 'hold' : 'idle'; }
+      break;
+    case 'hold':
+      if(!input.pinch){ state='open'; }
+      break;
+    case 'open':
+      if(openAmount > 0.8){ dropHeld(); state='idle'; }
+      break;
+  }
+}
+
+function targetY(){
+  if(state==='descend') return CFG.grabY;
+  if(state==='close')   return CFG.grabY;
+  if(state==='ascend' || state==='hold' || state==='open') return CFG.topY;
+  return CFG.restY;   // idle
+}
+function targetOpen(){
+  if(state==='close' || state==='ascend' || state==='hold') return 0; // 닫힘
+  return 1; // 열림
+}
+
+/* ============================================================
+   HUD
+   ============================================================ */
+let score = 0;
+const scoreEl = document.getElementById('score');
+function updateScore(){ scoreEl.textContent = score; }
+
+const toastEl = document.getElementById('toast');
+let toastTimer=null;
+function toast(msg, kind='info', ms=1800){
+  toastEl.textContent = msg;
+  toastEl.className = 'hud show '+kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ toastEl.className='hud '+kind; }, ms);
+}
+
+const hintEl = document.getElementById('hint');
+function setHint(){
+  hintEl.innerHTML = (mode==='cam')
+    ? '✋ 손을 움직여 이동 · <span class="k">손을 쥐면</span> 집기 · <span class="k">펴면</span> 놓기'
+    : '🖱️ 드래그로 이동 · <span class="k">누르면</span> 집기 · <span class="k">떼면</span> 놓기';
+}
+const modeLbl = document.getElementById('modeLbl');
+function setModeLabel(){
+  document.getElementById('modeBtn').firstChild.textContent = (mode==='cam'?'📷 ':'🖱️ ');
+  modeLbl.textContent = (mode==='cam') ? '카메라' : '마우스';
+  setHint();
+}
+
+document.getElementById('modeBtn').addEventListener('click', async()=>{
+  if(mode==='cam'){ stopCameraMode(); mode='mouse'; setModeLabel(); toast('마우스·터치 모드', 'info', 1400); }
+  else { await startCameraMode(); }
+});
+
+/* 간단 파티클 버스트(성공 시) */
+const sparks = [];
+const sparkMat = new THREE.MeshBasicMaterial({color:0x9ff7cf});
+function burst(){
+  for(let i=0;i<14;i++){
+    const s=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), sparkMat.clone());
+    s.position.set(CFG.boxX, CFG.boxWallH+0.5, 0);
+    s.userData.v = new THREE.Vector3((Math.random()-0.5)*4, 3+Math.random()*3, (Math.random()-0.5)*4);
+    s.userData.life = 1.0;
+    scene.add(s); sparks.push(s);
+  }
+}
+function updateSparks(dt){
+  for(let i=sparks.length-1;i>=0;i--){
+    const s=sparks[i];
+    s.userData.v.y -= 9*dt;
+    s.position.addScaledVector(s.userData.v, dt);
+    s.userData.life -= dt*1.3;
+    s.scale.setScalar(Math.max(0.01, s.userData.life));
+    if(s.userData.life<=0){ scene.remove(s); sparks.splice(i,1); }
+  }
+}
+
+/* ============================================================
+   메인 루프
+   ============================================================ */
+const clock = new THREE.Clock();
+let started = false;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 1/30);
+  const t = clock.elapsedTime;
+
+  if(started){
+    // 입력 → 목표 위치
+    let tx = claw.position.x, tz = claw.position.z;
+    if(state==='idle' || state==='hold'){
+      if(input.has){ tx=input.x; tz=input.z; }
+    }else if(state==='descend' || state==='close' || state==='ascend'){
+      tx=grabPos.x; tz=grabPos.z;   // 집는 시퀀스 중엔 시작점 고정
+    }
+    // 'open'(놓기) 상태는 tx,tz를 현재 위치로 유지(freeze) → 놓은 자리에 그대로 드롭
+    claw.position.x += (tx-claw.position.x)*CFG.lerpXZ;
+    claw.position.z += (tz-claw.position.z)*CFG.lerpXZ;
+    claw.position.y += (targetY()-claw.position.y)*CFG.lerpY;
+
+    // 프롱 개폐
+    openAmount += (targetOpen()-openAmount)*CFG.lerpOpen;
+    const ang = THREE.MathUtils.lerp(OPEN_CLOSED, OPEN_OPEN, openAmount);
+    for(const o of openers) o.rotation.z = ang;
+
+    updateState();
+    updateCable();
+
+    // 들고 있는 인형 동기화
+    if(held){
+      const p = held.body.position;
+      p.set(claw.position.x, claw.position.y - 0.55 - held.r, claw.position.z);
+      held.body.velocity.set(0,0,0);
+      held.body.angularVelocity.set(0,0,0);
+      held.mesh.position.set(p.x, p.y, p.z);
+    }
+
+    // 물리 스텝
+    world.step(1/60, dt, 4);
+
+    // 메쉬 동기화 + 리스폰
+    for(const d of dolls){
+      if(d===held) continue;
+      const p=d.body.position, q=d.body.quaternion;
+      d.mesh.position.set(p.x,p.y,p.z);
+      d.mesh.quaternion.set(q.x,q.y,q.z,q.w);
+      if(p.y < -4) respawnDoll(d);
+    }
+
+    updateSparks(dt);
+
+    // 카메라 모드인데 손 사라지면 핀치 해제(놓기 안전장치)
+    if(mode==='cam' && camActive && performance.now()-lastHandTs > 700){
+      input.pinch = false;
+    }
+  }
+
+  // 링 깜빡임
+  ringMat.emissiveIntensity = 1.1 + Math.sin(t*3.2)*0.5;
+  ringGlow.intensity = 4.5 + Math.sin(t*3.2)*2;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ============================================================
+   시작 / 리사이즈
+   ============================================================ */
+function beginGame(){
+  document.getElementById('overlay').style.display='none';
+  started = true;
+  setModeLabel();
+}
+document.getElementById('startMouse').addEventListener('click', ()=>{
+  mode='mouse'; beginGame(); toast('마우스·터치 모드로 시작! 🖱️','info',2000);
+});
+document.getElementById('startCam').addEventListener('click', async()=>{
+  beginGame();
+  await startCameraMode();
+});
+
+addEventListener('resize', ()=>{
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  placeCamera();
+});
+
+// 콘솔 헬스체크
+console.log('[claw] three', THREE.REVISION, '| cannon-es loaded | balls', dolls.length);
+</script>
+</body>
+</html>
