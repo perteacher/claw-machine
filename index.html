@@ -50,6 +50,127 @@
     box-shadow:0 8px 30px rgba(0,0,0,.4)}
   #modeBtn:active{transform:scale(.96)}
 
+  /* 도감 버튼 (모드 버튼 아래) */
+  #dexBtn{top:calc(max(14px,env(safe-area-inset-top)) + 48px);right:14px;pointer-events:auto;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    color:var(--txt);padding:9px 13px;border-radius:14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;
+    box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #dexBtn:active{transform:scale(.96)}
+
+  /* 수업 모드 버튼 (도감 버튼 아래) */
+  #lessonBtn{top:calc(max(14px,env(safe-area-inset-top)) + 96px);right:14px;pointer-events:auto;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    color:var(--txt);padding:9px 13px;border-radius:14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;
+    box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #lessonBtn:active{transform:scale(.96)}
+
+  /* 음소거 토글 (수업 버튼 아래) */
+  #sfxBtn{top:calc(max(14px,env(safe-area-inset-top)) + 144px);right:14px;pointer-events:auto;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    color:var(--txt);padding:9px 12px;border-radius:14px;font-size:16px;line-height:1;display:flex;align-items:center;
+    box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #sfxBtn:active{transform:scale(.96)}
+  #sfxBtn.off{opacity:.6}
+
+  /* 용어 편집 버튼 (음소거 아래) */
+  #termBtn{top:calc(max(14px,env(safe-area-inset-top)) + 192px);right:14px;pointer-events:auto;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    color:var(--txt);padding:9px 12px;border-radius:14px;font-size:16px;line-height:1;display:flex;align-items:center;
+    box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #termBtn:active{transform:scale(.96)}
+
+  /* 패널 공통 (도감 · 수업) */
+  #dexPanel,#lessonPanel{display:none;position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(560px,92vw);max-height:78vh;overflow:auto;pointer-events:auto;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-radius:20px;padding:18px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  #dexPanel.on,#lessonPanel.on{display:block}
+  .dexHead{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin-bottom:14px}
+  .dexHead #dexProg{font-size:13px;font-weight:600;opacity:.75;color:var(--accent)}
+  .dexHead #dexClose,.dexHead #lessonClose{margin-left:auto;cursor:pointer;background:rgba(255,255,255,.1);border:none;color:var(--txt);
+    width:30px;height:30px;border-radius:10px;font-size:15px;line-height:1}
+  #dexGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:12px}
+  .dexCard{background:rgba(255,255,255,.05);border:1px solid var(--glass-bd);border-radius:14px;
+    padding:14px 10px 11px;text-align:center;position:relative}
+  .dexCard .swatch{width:54px;height:54px;border-radius:50%;margin:0 auto 9px;background:#1a1d2a;
+    box-shadow:inset 0 -7px 11px rgba(0,0,0,.28)}
+  .dexCard .nm{font-size:13px;font-weight:700}
+  .dexCard .ct{font-size:11px;opacity:.7;margin-top:3px;font-variant-numeric:tabular-nums}
+  .dexCard .tag{position:absolute;top:6px;left:6px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:7px}
+  .tag.common{background:#3a3f55;color:#cdd3ee}
+  .tag.rare{background:#274a6a;color:#9fd0ff}
+  .tag.unique{background:#523078;color:#e8c6ff}
+  .dexCard.locked .swatch{box-shadow:inset 0 0 0 2px rgba(255,255,255,.06)}
+  .dexCard.locked .nm{opacity:.4}
+  .dexCard.locked .tag{opacity:.5}
+  .dexCard.rare{border-color:#3d6da3}
+  .dexCard.unique{border-color:#8a5cc0;box-shadow:0 0 18px rgba(155,92,255,.28)}
+  .dexCard .term{font-size:11.5px;font-weight:800;color:var(--gold);margin-top:6px;line-height:1.25}
+  .dexCard .tdesc{font-size:10px;opacity:.62;margin-top:2px;line-height:1.3}
+  .dexUnit{font-size:12px;font-weight:700;opacity:.8;margin:-6px 2px 12px;color:var(--accent)}
+  .dexUnit::before{content:'📚 단원 · '}
+
+  /* ---------- M5: 과학 용어 카드 ---------- */
+  #termCard{position:fixed;z-index:36;left:50%;top:30%;transform:translate(-50%,-12px) scale(.92);
+    width:min(360px,86vw);pointer-events:none;opacity:0;text-align:center;
+    background:linear-gradient(150deg,rgba(40,46,78,.96),rgba(22,26,46,.96));
+    border:1px solid rgba(255,213,107,.45);border-radius:20px;padding:22px 22px 18px;
+    box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 30px rgba(255,200,110,.18);
+    transition:opacity .28s ease,transform .28s cubic-bezier(.2,1.3,.4,1)}
+  #termCard.on{opacity:1;transform:translate(-50%,0) scale(1);pointer-events:auto;cursor:pointer}
+  #termCard .tcUnit{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--accent);opacity:.85;margin-bottom:7px}
+  #termCard .tcTerm{font-size:clamp(26px,7vw,34px);font-weight:900;letter-spacing:-.5px;
+    background:linear-gradient(135deg,#ffd56b,#ff9ecb 60%,#9fd0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #termCard .tcDesc{font-size:14px;line-height:1.6;opacity:.92;margin-top:11px}
+  #termCard .tcHint{font-size:10.5px;opacity:.45;margin-top:13px}
+
+  /* ---------- M5: 용어 편집 패널 ---------- */
+  #termPanel{display:none;position:fixed;z-index:60;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(620px,94vw);max-height:84vh;overflow:auto;pointer-events:auto;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-radius:20px;padding:18px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  #termPanel.on{display:block}
+  .dexHead .thint{font-size:11px;font-weight:700;opacity:.6}
+  .termUnitRow{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;font-weight:700}
+  .termUnitRow input{flex:1;background:rgba(0,0,0,.25);border:1px solid var(--glass-bd);color:var(--txt);
+    padding:8px 11px;border-radius:10px;font-size:13px;font-weight:700}
+  #termTable{display:flex;flex-direction:column;gap:8px}
+  .trow{display:grid;grid-template-columns:74px 110px 1fr;gap:9px;align-items:center}
+  .trow .tnm{font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px}
+  .trow .tdot{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:inset 0 -3px 5px rgba(0,0,0,.3)}
+  .trow input{background:rgba(0,0,0,.25);border:1px solid var(--glass-bd);color:var(--txt);
+    padding:7px 9px;border-radius:9px;font-size:12.5px;font-weight:600;width:100%}
+  .trow input.tterm{font-weight:800;color:var(--gold)}
+  .termHd{display:grid;grid-template-columns:74px 110px 1fr;gap:9px;font-size:11px;opacity:.5;font-weight:700;margin-bottom:2px;padding:0 2px}
+  .termBtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .termBtns button,.termBtns .impBtn{flex:1;min-width:120px;cursor:pointer;text-align:center;
+    background:rgba(255,255,255,.08);border:1px solid var(--glass-bd);color:var(--txt);
+    padding:10px 8px;border-radius:11px;font-size:12.5px;font-weight:700}
+  .termBtns button:active,.termBtns .impBtn:active{transform:scale(.97)}
+  .termBtns .reset{background:rgba(255,120,120,.16);border-color:rgba(255,150,150,.3)}
+  .termNote{font-size:11px;opacity:.55;line-height:1.5;margin-top:11px}
+  .termNote b{color:var(--accent)}
+  @media (max-width:520px){
+    .trow,.termHd{grid-template-columns:64px 1fr}
+    .trow .tdesc{grid-column:1 / -1}
+    .termHd span:last-child{display:none}
+  }
+
+  /* 수업 모드 패널 내부 */
+  .lessonStats{font-size:13.5px;margin-bottom:11px;opacity:.92;line-height:1.7}
+  .lessonStats b{color:var(--accent);font-variant-numeric:tabular-nums}
+  #lessonChart{width:100%;display:block;background:rgba(0,0,0,.28);
+    border:1px solid var(--glass-bd);border-radius:12px}
+  .lessonCtl{display:flex;align-items:center;gap:11px;margin:13px 2px 10px;font-size:12.5px}
+  .lessonCtl label{white-space:nowrap}
+  .lessonCtl b{color:var(--gold);font-variant-numeric:tabular-nums}
+  .lessonCtl input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+  .lessonBtns{display:flex;gap:8px}
+  .lessonBtns button{flex:1;cursor:pointer;background:rgba(255,255,255,.08);border:1px solid var(--glass-bd);
+    color:var(--txt);padding:10px 0;border-radius:11px;font-size:13px;font-weight:700}
+  .lessonBtns button:active{transform:scale(.96)}
+  .lessonBtns button.reset{background:rgba(255,120,120,.16);border-color:rgba(255,150,150,.3)}
+
   /* webcam preview */
   #preview{position:fixed;right:14px;bottom:max(14px,env(safe-area-inset-bottom));z-index:21;
     width:160px;height:120px;border-radius:14px;overflow:hidden;display:none;
@@ -84,6 +205,46 @@
   .spin{width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,.15);border-top-color:var(--accent);
     animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* ---------- M4: 코인/타임 HUD ---------- */
+  #meta{display:none;top:calc(max(14px,env(safe-area-inset-top)) + 52px);left:14px;align-items:center;gap:6px;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:7px 13px;border-radius:14px;font-weight:700;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #meta.on{display:flex}
+  #meta b{color:var(--accent);font-variant-numeric:tabular-nums;font-size:16px}
+
+  /* ---------- M4: 시작 오버레이 설정 ---------- */
+  #setup{display:flex;flex-direction:column;gap:11px;width:min(340px,86vw);
+    background:rgba(255,255,255,.04);border:1px solid var(--glass-bd);border-radius:16px;padding:14px 16px}
+  .setRow{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600}
+  .setLbl{min-width:62px;text-align:left;opacity:.9}
+  .setUnit{font-size:11.5px;opacity:.55}
+  .seg{display:flex;gap:6px;margin-left:auto}
+  .seg button{pointer-events:auto;cursor:pointer;background:rgba(255,255,255,.07);border:1px solid var(--glass-bd);
+    color:var(--txt);padding:7px 11px;border-radius:11px;font-size:12.5px;font-weight:700;transition:transform .1s}
+  .seg button:active{transform:scale(.94)}
+  .seg button.on{background:linear-gradient(135deg,#6c8cff,#9b6bff);border-color:transparent;box-shadow:0 4px 16px rgba(120,110,255,.4)}
+  .toggle{pointer-events:auto;cursor:pointer;background:rgba(255,255,255,.07);border:1px solid var(--glass-bd);color:var(--txt);
+    padding:7px 14px;border-radius:11px;font-size:12.5px;font-weight:800;letter-spacing:.5px}
+  .toggle.on{background:var(--accent);color:#06281c;border-color:transparent}
+  #setup input[type=number]{width:56px;background:rgba(0,0,0,.25);border:1px solid var(--glass-bd);color:var(--txt);
+    padding:6px 8px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;pointer-events:auto}
+
+  /* ---------- M4: 결과 화면 ---------- */
+  #result{position:fixed;inset:0;z-index:45;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:22px;padding:24px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 25%, rgba(50,35,80,.6), rgba(4,5,12,.94) 72%);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #result.on{display:flex}
+  #result h1{font-size:clamp(24px,6.5vw,38px);font-weight:900;letter-spacing:-.5px;
+    background:linear-gradient(135deg,#ffd56b,#ff9ecb 50%,#7ef0c0);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #resultStats{display:flex;flex-direction:column;gap:8px;align-items:center;
+    background:rgba(255,255,255,.05);border:1px solid var(--glass-bd);border-radius:16px;padding:18px 26px;min-width:min(300px,82vw)}
+  #resultStats .rsBig{font-size:17px;font-weight:800;margin-bottom:4px}
+  #resultStats .rsBig b{color:var(--accent);font-variant-numeric:tabular-nums;font-size:21px}
+  #resultStats .rsRow{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;min-width:160px}
+  #resultStats .rsRow .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
+  #resultStats .rsRow b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -91,9 +252,53 @@
 
 <!-- HUD -->
 <div id="counter" class="hud"><span class="ic">🧸</span> 담은 인형 <b id="score">0</b></div>
+<div id="meta" class="hud"></div>
 <button id="modeBtn" class="hud">🖐 <span id="modeLbl">모드</span></button>
+<button id="dexBtn" class="hud">📖 <span>도감</span></button>
+<button id="lessonBtn" class="hud">📊 <span>수업</span></button>
+<button id="sfxBtn" class="hud" title="효과음 켜기/끄기">🔊</button>
 <div id="hint" class="hud"></div>
 <div id="toast" class="hud"></div>
+
+<!-- M5: 과학 용어 카드(인형 뽑으면 표시) -->
+<div id="termCard">
+  <div class="tcUnit"></div>
+  <div class="tcTerm"></div>
+  <div class="tcDesc"></div>
+  <div class="tcHint">탭하면 닫혀요</div>
+</div>
+
+<!-- 도감 패널 -->
+<div id="dexPanel" class="hud">
+  <div class="dexHead">📖 인형 도감 <span id="dexProg"></span><button id="dexClose">✕</button></div>
+  <div id="dexUnit" class="dexUnit"></div>
+  <div id="dexGrid"></div>
+</div>
+
+<!-- M5: 과학 용어 편집 패널(교사용) -->
+<div id="termPanel" class="hud">
+  <div class="dexHead">✏️ 과학 용어 편집 <span class="thint">교사용</span><button id="termClose">✕</button></div>
+  <div class="termUnitRow"><label>단원명</label><input id="termUnit" type="text" placeholder="예: 동물과에너지"></div>
+  <div id="termTable"></div>
+  <div class="termBtns">
+    <button id="termExport">⬇ 내보내기 terms.json</button>
+    <label id="termImportLbl" class="impBtn">⬆ 가져오기<input id="termImport" type="file" accept=".json,application/json" hidden></label>
+    <button id="termReset" class="reset">기본값 초기화</button>
+  </div>
+  <p class="termNote">수정은 자동 저장(이 기기)돼요. 다른 기기엔 <b>내보내기→가져오기</b>로 옮기세요. 코드는 건드리지 않아요.</p>
+</div>
+
+<!-- 확률 수업 모드 패널 -->
+<div id="lessonPanel" class="hud">
+  <div class="dexHead">📊 확률 수업 모드 <button id="lessonClose">✕</button></div>
+  <div id="lessonStats" class="lessonStats"></div>
+  <canvas id="lessonChart"></canvas>
+  <div class="lessonCtl">
+    <label>이론확률 p = <b id="lessonPVal">0.30</b></label>
+    <input id="lessonP" type="range" min="0" max="1" step="0.01" value="0.3">
+  </div>
+  <div id="lessonBtns" class="lessonBtns"></div>
+</div>
 
 <div id="preview"><span class="lbl">CAM</span><video id="video" playsinline muted></video></div>
 
@@ -101,6 +306,31 @@
 <div id="overlay">
   <h1>손인형뽑기</h1>
   <p class="sub">웹캠으로 손을 인식해 크레인을 조종해요.<br>손을 <b>쥐면</b> 집게가 내려가 인형을 집고, <b>펴면</b> 집게가 스스로 <b>배출구</b>로 가서 떨어뜨려요. 🎁<br>실제 기계처럼 <b>가끔 미끄러져요!</b></p>
+  <div id="setup">
+    <div class="setRow">
+      <span class="setLbl">난이도</span>
+      <div class="seg" id="presetSeg">
+        <button data-v="easy">쉬움</button>
+        <button data-v="real">현실</button>
+        <button data-v="boss">사장모드</button>
+      </div>
+    </div>
+    <div class="setRow">
+      <span class="setLbl">상점 모드</span>
+      <button class="toggle" id="coinToggle">OFF</button>
+      <input id="coinCount" type="number" min="1" max="99" value="10" inputmode="numeric">
+      <span class="setUnit">상점</span>
+    </div>
+    <div class="setRow">
+      <span class="setLbl">타임어택</span>
+      <input id="timeInput" type="number" min="0" max="600" value="0" inputmode="numeric">
+      <span class="setUnit">초 (0=무제한)</span>
+    </div>
+    <div class="setRow">
+      <span class="setLbl">상품 이름</span>
+      <button class="toggle" id="startEditBtn" style="margin-left:auto">✏️ 라벨 편집</button>
+    </div>
+  </div>
   <div class="btns">
     <button class="btn cam" id="startCam"><span class="em">📷</span> 카메라로 시작</button>
     <button class="btn mouse" id="startMouse"><span class="em">🖱️</span> 마우스·터치로 시작</button>
@@ -109,6 +339,13 @@
 </div>
 
 <div id="loading"><div class="spin"></div><div>카메라 준비 중…</div></div>
+
+<!-- M4: 결과 화면 -->
+<div id="result">
+  <h1 id="resultTitle">게임 종료</h1>
+  <div id="resultStats"></div>
+  <button class="btn cam" id="restartBtn"><span class="em">🔄</span> 다시 하기</button>
+</div>
 
 <script type="importmap">
 {
@@ -136,9 +373,10 @@ const CFG = {
   descendTime:1.0, ascendTime:1.0,        // 하강/상승 각 ~1초
   grabRadius:0.6,
   // 배출구(코너 칸막이 + 바닥 구멍)
-  chuteX:-1.7, chuteZ:1.4, chuteHalf:0.6, dividerH:0.85,
+  chuteX:-1.7, chuteZ:1.4, chuteHalf:0.6, dividerH:1.0,   // 칸막이↑: 인형 굴러 못 넘음
   // 인형 스폰(집게 도달 범위 안, chute 코너 제외)
   spawnX:[-1.9, 1.9], spawnZ:[-1.5, 0.9], nBalls:26,
+  settleTime:2.2, dropStagger:0.07,       // 시작 후 시간차 낙하 + 정착시간(판정 OFF)
   // 카메라 손 인식
   pinchThreshold:0.55, handXRange:[0.1, 0.9], handYRange:[0.25, 0.78], smooth:0.25,
   invertZ:false,
@@ -148,8 +386,140 @@ const CFG = {
   // 내부 모션 타이밍(보조)
   closeTime:0.35, deliverTime:0.85, dropTime:0.5, dropY:1.6,
   lerpXZ:0.22, lerpY:0.12, lerpOpen:0.25,
-  ceilingY:5.4
+  ceilingY:5.4,
+
+  // ---- M1: 인형 희귀도 + 도감 ----
+  RARITY:{
+    common:{weight:70, grabMul:1.0,  points:1,  glow:0.0},
+    rare:  {weight:25, grabMul:0.7,  points:3,  glow:0.5},
+    unique:{weight:5,  grabMul:0.45, points:10, glow:1.3},
+  },
+  DOLLS:[
+    {id:'pinky',  name:'핑키',     rarity:'common', color:0xff7a9c, ears:true },
+    {id:'lemon',  name:'레몬',     rarity:'common', color:0xffd23f, ears:false},
+    {id:'sky',    name:'스카이',   rarity:'common', color:0x57c6ff, ears:true },
+    {id:'mint',   name:'민트',     rarity:'common', color:0x8ce06b, ears:false},
+    {id:'grape',  name:'그레이프', rarity:'rare',   color:0xc792ff, ears:true },
+    {id:'coral',  name:'코랄',     rarity:'rare',   color:0xff9f5a, ears:false},
+    {id:'aqua',   name:'아쿠아',   rarity:'rare',   color:0x6be0c8, ears:true },
+    {id:'galaxy', name:'갤럭시',   rarity:'unique', color:0x9b5cff, ears:true },
+    {id:'gold',   name:'골드스타', rarity:'unique', color:0xffd700, ears:false},
+  ],
+  dexKey:'clawdex',
+
+  // ---- M5(갱신): 라벨 카드 (교사 직접 편집) — 기본 라벨 없음 ----
+  termsKey:'clawterms',    // localStorage 편집값(있을 때만 카드 표시)
+  TERMS:{ unit:'', map:{} },   // 기본=빈 상태. 과학용어 자동 시드 없음(원하면 가져오기로 채움)
+
+  // ---- M2: 확률 수업 모드 ----
+  lessonP:0.3, simBatch:[10,100,1000],
+
+  // ---- M3: 효과음 + 햅틱 ----
+  sfxEnabled:true, masterVolume:0.6, sfxKey:'clawsfx',
+  SFX:{
+    descend:{ freq:230, freq2:130, dur:0.50, type:'sine'     },   // 하강: 낮게 깔리는 글라이드다운
+    close:  { freq:520, dur:0.07,  type:'square'             },   // 프롱 닫힘: 짧은 클릭(x2)
+    slip:   { freq:420, freq2:110, dur:0.46, type:'sawtooth' },   // 슬립/약올림: 맥빠지는 하강음
+    common: { notes:[660],               dur:0.16, type:'sine'     },   // 일반 성공: 짧은 띵
+    rare:   { notes:[660,990],           dur:0.14, type:'triangle' },   // 레어: 2음
+    unique: { notes:[523,659,784,1047],  dur:0.13, type:'triangle' },   // 유니크: 팡파레
+  },
+  // 햅틱 패턴(ms). 미지원 기기는 무시.
+  HAPTIC:{ grab:30, slip:[20,40,20], common:40, rare:[30,30,30], unique:[60,40,60,40,140] },
+
+  // ---- M4: 난이도 프리셋 + 코인 모드 ----
+  PRESETS:{
+    easy:  {grabFirmRate:0.6,  grabWeakRate:0.3,  weakSlipPerSec:0.3, pityThreshold:2},
+    real:  {grabFirmRate:0.35, grabWeakRate:0.4,  weakSlipPerSec:0.6, pityThreshold:4},
+    boss:  {grabFirmRate:0.2,  grabWeakRate:0.4,  weakSlipPerSec:0.9, pityThreshold:7},
+  },
+  coinMode:false, startCoins:10, timeAttackSec:0,   // timeAttackSec>0이면 타임어택
+  m4Key:'clawm4'
 };
+
+/* ============================================================
+   M4 — 난이도 프리셋 + 코인/타임어택 설정 (localStorage 영속)
+   ============================================================ */
+const M4 = (()=>{
+  const def = { preset:'real', coinMode:CFG.coinMode, startCoins:CFG.startCoins, timeAttackSec:CFG.timeAttackSec };
+  let s;
+  try{ s = Object.assign({}, def, JSON.parse(localStorage.getItem(CFG.m4Key)) || {}); }catch(e){ s = Object.assign({}, def); }
+  function save(){ try{ localStorage.setItem(CFG.m4Key, JSON.stringify(s)); }catch(e){} }
+  // 선택 프리셋의 확률·악력·pity를 CFG에 일괄 반영(rollGrade/tickGrip가 CFG.*를 live 참조)
+  function applyPreset(){
+    const p = CFG.PRESETS[s.preset] || CFG.PRESETS.real;
+    CFG.grabFirmRate   = p.grabFirmRate;
+    CFG.grabWeakRate   = p.grabWeakRate;
+    CFG.weakSlipPerSec = p.weakSlipPerSec;
+    CFG.pityThreshold  = p.pityThreshold;
+  }
+  return { get s(){ return s; }, save, applyPreset };
+})();
+M4.applyPreset();   // 저장된 프리셋을 시작 시 즉시 적용
+
+/* ============================================================
+   M3 — 효과음(Web Audio 합성) + 햅틱
+   외부 파일 0 · AudioContext는 첫 제스처(시작 버튼)에서 resume.
+   ============================================================ */
+const Sfx = (()=>{
+  let ctx = null, master = null;
+  let enabled = (()=>{ try{ const v=localStorage.getItem(CFG.sfxKey); return v===null ? CFG.sfxEnabled : v==='1'; }catch(e){ return CFG.sfxEnabled; } })();
+
+  function ensure(){
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = CFG.masterVolume;
+      master.connect(ctx.destination);
+    }
+    return ctx;
+  }
+  function resume(){ const c=ensure(); if(c && c.state==='suspended') c.resume(); }
+
+  // 단일 톤(주파수 글라이드 옵션) — 클릭 방지용 짧은 attack/decay 엔벨로프
+  function tone(freq, dur, type, t0, gain, freqEnd){
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type||'sine';
+    o.frequency.setValueAtTime(freq, t0);
+    if(freqEnd) o.frequency.exponentialRampToValueAtTime(Math.max(1,freqEnd), t0+dur);
+    const peak=(gain==null?0.4:gain);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0+dur+0.02);
+  }
+
+  function play(name){
+    if(!enabled) return;
+    const c=ensure(); if(!c) return;
+    if(c.state==='suspended') c.resume();
+    const now=c.currentTime, S=CFG.SFX;
+    switch(name){
+      case 'descend': tone(S.descend.freq, S.descend.dur, S.descend.type, now, 0.30, S.descend.freq2); break;
+      case 'close':   tone(S.close.freq, S.close.dur, S.close.type, now, 0.28);
+                      tone(S.close.freq*0.7, S.close.dur, S.close.type, now+0.06, 0.20); break;
+      case 'slip':    tone(S.slip.freq, S.slip.dur, S.slip.type, now, 0.30, S.slip.freq2); break;
+      case 'common': case 'rare': case 'unique': {
+        const cfg=S[name];
+        cfg.notes.forEach((f,i)=> tone(f, cfg.dur, cfg.type, now + i*cfg.dur*0.85, 0.34));
+        break;
+      }
+    }
+  }
+
+  function vibrate(pattern){
+    if(!enabled || !navigator.vibrate) return;   // 미지원 기기는 무시
+    try{ navigator.vibrate(pattern); }catch(e){}
+  }
+
+  function setEnabled(v){ enabled=!!v; try{ localStorage.setItem(CFG.sfxKey, enabled?'1':'0'); }catch(e){} if(enabled) resume(); }
+  function isEnabled(){ return enabled; }
+
+  return { resume, play, vibrate, setEnabled, isEnabled };
+})();
 
 /* ============================================================
    기본 three 세팅
@@ -305,7 +675,7 @@ boxMesh(chHalf*2+0.2, 0.08, 0.08, chx, -0.5, cz1, matRed, true);
    물리 세계 (cannon-es)
    ============================================================ */
 const world = new CANNON.World({gravity:new CANNON.Vec3(0,-18,0)});
-world.solver.iterations = 26;
+world.solver.iterations = 40;   // 터널링 감소
 world.solver.tolerance = 0.001;
 world.broadphase = new CANNON.SAPBroadphase(world);
 world.allowSleep = true;
@@ -326,12 +696,12 @@ function staticBox(hx,hy,hz,x,y,z){
   b.position.set(x,y,z); world.addBody(b); return b;
 }
 
-// 유리 케이스 물리벽 4면 (완전 밀폐, 안쪽면=경계)
-const WT=0.1, WH=cH/2;
-staticBox(WT, WH, (cz1-cz0)/2+0.1, cx0-WT, WH, 0);  // left
-staticBox(WT, WH, (cz1-cz0)/2+0.1, cx1+WT, WH, 0);  // right
-staticBox((cx1-cx0)/2+0.1, WH, WT, 0, WH, cz0-WT);  // back
-staticBox((cx1-cx0)/2+0.1, WH, WT, 0, WH, cz1+WT);  // front
+// 유리 케이스 물리벽 4면 (완전 밀폐, 시각벽과 일치+더 높게, 모서리 겹쳐 틈 없게)
+const WT=0.12, WH=(cH+0.8)/2;
+staticBox(WT, WH, (cz1-cz0)/2+0.14, cx0-WT, WH, 0);  // left
+staticBox(WT, WH, (cz1-cz0)/2+0.14, cx1+WT, WH, 0);  // right
+staticBox((cx1-cx0)/2+0.14, WH, WT, 0, WH, cz0-WT);  // back
+staticBox((cx1-cx0)/2+0.14, WH, WT, 0, WH, cz1+WT);  // front
 
 // 케이스 바닥 콜라이더 — chute 구멍만 빔
 staticBox((cx1-cx0)/2, 0.1, (0.8-cz0)/2, 0, -0.05, (cz0+0.8)/2);          // A: 앞 전폭
@@ -354,14 +724,31 @@ staticBox(binHX, 0.62, 0.06, chx, binWallY, chz-binHZ);                   // bac
 /* ============================================================
    플러시 인형 ~26개
    ============================================================ */
-const CANDY = [0xff7eb6,0xffd166,0x8ad7ff,0xb6f06a,0xc89bff,0xffa45c,0xff9ecb,0x7ef0c0,0xffe28a,0x9bb8ff];
-const dolls = [];   // {mesh, body, r, scored, parked}
+const dolls = [];   // {mesh, body, r, type, scored, parked}
+const sparkleGroups = [];   // 유니크 인형 반짝임 트윈클 대상
 const eyeMat = new THREE.MeshStandardMaterial({color:0x101015, roughness:0.4});
 const eyeWhiteMat = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.5});
 
-function makeDoll(r, color){
+// 희귀도 weight로 타입 분포 결정
+function pickDollType(){
+  let total = 0;
+  for(const d of CFG.DOLLS) total += CFG.RARITY[d.rarity].weight;
+  let r = Math.random()*total;
+  for(const d of CFG.DOLLS){ r -= CFG.RARITY[d.rarity].weight; if(r <= 0) return d; }
+  return CFG.DOLLS[CFG.DOLLS.length-1];
+}
+
+// 외형: 희귀도별 emissive=glow·메탈, 유니크는 스파클
+function makeDoll(r, type){
+  const rar = CFG.RARITY[type.rarity];
   const g = new THREE.Group();
-  const bodyMat = new THREE.MeshStandardMaterial({color, roughness:0.62, metalness:0.0});
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color:type.color,
+    roughness:0.62 - rar.glow*0.22,
+    metalness: rar.glow>0 ? Math.min(0.7, rar.glow*0.5) : 0.0,
+    emissive: rar.glow>0 ? type.color : 0x000000,
+    emissiveIntensity: rar.glow
+  });
   const bodyMesh = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 22), bodyMat);
   bodyMesh.castShadow = true; bodyMesh.receiveShadow = true;
   g.add(bodyMesh);
@@ -374,7 +761,7 @@ function makeDoll(r, color){
     hl.position.set(sx*r*0.32 + er*0.3, r*0.16 + er*0.3, r*0.92);
     g.add(hl);
   }
-  if(Math.random() < 0.45){
+  if(type.ears){
     const earR = r*0.34;
     for(const sx of [-1,1]){
       const ear = new THREE.Mesh(new THREE.SphereGeometry(earR, 14, 12), bodyMat);
@@ -383,6 +770,20 @@ function makeDoll(r, color){
       ear.castShadow = true;
       g.add(ear);
     }
+  }
+  // 유니크: 주위를 도는 반짝임(스파클)
+  if(type.rarity==='unique'){
+    const spk = [];
+    const sparkMat = new THREE.MeshBasicMaterial({color:0xffffff});
+    for(let i=0;i<6;i++){
+      const s = new THREE.Mesh(new THREE.OctahedronGeometry(r*0.14, 0), sparkMat);
+      const a = i/6*Math.PI*2;
+      s.position.set(Math.cos(a)*r*1.18, r*0.4 + Math.sin(a*2)*r*0.35, Math.sin(a)*r*1.18);
+      s.userData.phase = a*3;
+      g.add(s); spk.push(s);
+    }
+    g.userData.sparkles = spk;
+    sparkleGroups.push(g);
   }
   scene.add(g);
   return g;
@@ -395,26 +796,51 @@ function inChuteArea(x,z,m){ m=m||0;
 function spawnDolls(){
   for(let i=0;i<CFG.nBalls;i++){
     const r = 0.30 + Math.random()*0.16;          // 0.30 ~ 0.46
-    const color = CANDY[Math.floor(Math.random()*CANDY.length)];
-    const mesh = makeDoll(r, color);
+    const type = pickDollType();
+    const mesh = makeDoll(r, type);
     const body = new CANNON.Body({
       mass:1.0, material:matBall,
       shape:new CANNON.Sphere(r),
       linearDamping:0.25, angularDamping:0.55,
       allowSleep:true, sleepSpeedLimit:0.22, sleepTimeLimit:0.4
     });
-    // chute 코너 제외하고 스폰
+    // chute 코너 제외하고 스폰 (벽에서 반지름 이상 안쪽 = spawnX/Z 가 케이스 내부)
     let x,z, tries=0;
     do{
       x = THREE.MathUtils.lerp(CFG.spawnX[0]+r, CFG.spawnX[1]-r, Math.random());
       z = THREE.MathUtils.lerp(CFG.spawnZ[0]+r, CFG.spawnZ[1]-r, Math.random());
     }while(inChuteArea(x,z,0.25) && ++tries<12);
-    body.position.set(x, 0.6 + (i%6)*0.5 + Math.random()*0.4, z);
+    body.position.set(x, 0.55 + (i%5)*0.4, z);   // 낮게(깊은 겹침 방지)
+    body.type = CANNON.Body.STATIC; body.mass = 0; body.updateMassProperties();   // 시작 전엔 정지
     world.addBody(body);
-    dolls.push({mesh, body, r, scored:false, parked:false});
+    dolls.push({mesh, body, r, type, scored:false, parked:false, delivered:false, dropAt:i*CFG.dropStagger});
   }
+  for(const d of dolls) d.mesh.position.copy(d.body.position);   // 첫 프레임 메쉬 동기화
 }
 spawnDolls();
+
+/* 시작 후 살짝 시간차로 인형 낙하 (static→dynamic 순차) + 정착시간 동안 판정 OFF */
+let settleClock = 0;
+function releaseQueued(){
+  for(const d of dolls){
+    if(d.dropAt==null || settleClock < d.dropAt) continue;
+    d.dropAt = null;
+    d.body.type = CANNON.Body.DYNAMIC; d.body.mass = 1.0; d.body.updateMassProperties();
+    d.body.wakeUp(); d.body.velocity.set(0,0,0); d.body.angularVelocity.set(0,0,0);
+  }
+}
+const settleDone = ()=> settleClock >= CFG.settleTime;
+
+// 안전장치: 케이스 밖으로 나간(=벽 면 넘은) 인형만 즉시 내부로 되돌림(벽에 닿아 쉬는 인형은 안 건드림)
+function clampInside(d){
+  const p=d.body.position;
+  const nx=THREE.MathUtils.clamp(p.x, cx0+d.r, cx1-d.r);
+  const nz=THREE.MathUtils.clamp(p.z, cz0+d.r, cz1-d.r);
+  if(nx!==p.x || nz!==p.z){
+    p.x=nx; p.z=nz;
+    d.body.velocity.x*=0.2; d.body.velocity.z*=0.2;
+  }
+}
 
 // 수거함 안에 정적 고정(점수 인형 깔끔히 쌓기)
 let parkedCount = 0;
@@ -431,7 +857,7 @@ function parkInBin(d){
 }
 
 function respawnDoll(d){
-  d.scored = false;
+  d.scored = false; d.delivered = false;
   d.body.wakeUp();
   d.body.velocity.set(0,0,0);
   d.body.angularVelocity.set(0,0,0);
@@ -613,6 +1039,9 @@ let held = null;            // doll
 let grade = null;          // 'FIRM' | 'WEAK' | 'TEASE'
 let heldClock = 0;         // 집은 뒤 경과(슬립/약올림 판정용)
 let failStreak = 0;        // 연속 미배달(pity용)
+// ---- M4: 코인/타임어택 판(run) 상태 ----
+let coins = 0, timeLeft = 0, gameOver = false, pendingEnd = -1;
+const run = { dolls:0, score:0, common:0, rare:0, unique:0, items:{} };   // 이번 판 통계(items: 상품 id→개수)
 const grabPos = new THREE.Vector3();      // 집는 시퀀스 동안 고정 XZ
 const deliverStart = new THREE.Vector3(); // deliver 시작 XZ
 const OPEN_CLOSED = 0.087, OPEN_OPEN = 0.489;   // 닫힘 ~5°, 열림 ~28°
@@ -620,11 +1049,12 @@ const OPEN_CLOSED = 0.087, OPEN_OPEN = 0.489;   // 닫힘 ~5°, 열림 ~28°
 function setState(s){ state=s; phaseT=0; }
 const smooth01 = (t)=>THREE.MathUtils.smoothstep(THREE.MathUtils.clamp(t,0,1),0,1);
 
-function rollGrade(){
+function rollGrade(grabMul){
   if(failStreak >= CFG.pityThreshold){ failStreak = 0; return 'FIRM'; }   // 사장 자비
+  const firmRate = CFG.grabFirmRate * grabMul;   // 희귀할수록 FIRM↓ → WEAK/TEASE로 치우침
   const r = Math.random();
-  if(r < CFG.grabFirmRate) return 'FIRM';
-  if(r < CFG.grabFirmRate + CFG.grabWeakRate) return 'WEAK';
+  if(r < firmRate) return 'FIRM';
+  if(r < firmRate + CFG.grabWeakRate) return 'WEAK';
   return 'TEASE';
 }
 
@@ -641,12 +1071,16 @@ function pickNearest(){
 }
 
 function attemptGrab(){
+  if(M4.s.coinMode){ coins = Math.max(0, coins-1); updateMeta(); }   // 집기 시도당 코인 -1
   const d = pickNearest();
   if(d){
-    held = d; grade = rollGrade(); heldClock = 0;
+    held = d; grade = rollGrade(CFG.RARITY[d.type.rarity].grabMul); heldClock = 0;
+    d.lessonPending = true;   // 이 집기 시도의 성패를 수업 차트에 기록 대기
     d.body.sleep();
+    Sfx.vibrate(CFG.HAPTIC.grab);   // 집기 햅틱
   }else{
     failStreak++;   // 헛집음도 미배달
+    lessonRecord(false);   // 빈 집기 = 실패 시행
   }
 }
 
@@ -654,12 +1088,14 @@ function attemptGrab(){
 function slipDrop(reason){
   if(!held) return;
   const d = held; held = null; grade = null;
-  d.scored = false;
+  d.scored = false; d.delivered = false;   // 슬립=배달 아님 → 점수 없음
   d.body.wakeUp();
   d.body.velocity.set((Math.random()-0.5)*1.6, -0.4, (Math.random()-0.5)*1.6);
   d.body.angularVelocity.set((Math.random()-0.5)*5,(Math.random()-0.5)*5,(Math.random()-0.5)*5);
   failStreak++;
+  if(d.lessonPending){ d.lessonPending = false; lessonRecord(false); }   // 슬립·약올림 = 실패 시행
   openAmount = 1;   // 프롱 탁 벌림
+  Sfx.play('slip'); Sfx.vibrate(CFG.HAPTIC.slip);   // 슬립/약올림 사운드 + 햅틱
   toast(reason==='tease' ? '앗, 약올리고 놓쳤다 😜' : '헐겁게 물렸나봐요 😣', 'bad', 1300);
 }
 
@@ -677,11 +1113,12 @@ function tickGrip(dt){
 function updateState(dt){
   switch(state){
     case 'idle':
-      if(input.pinch){ grabPos.set(claw.position.x, 0, claw.position.z); setState('descend'); }
+      if(gameOver) break;
+      if(input.pinch && (!M4.s.coinMode || coins>0)){ grabPos.set(claw.position.x, 0, claw.position.z); setState('descend'); Sfx.play('descend'); }
       break;
     case 'descend':
       if(!input.pinch){ setState('idle'); break; }     // 중도 취소 → 제자리서 idle 복귀(스냅 없음)
-      if(phaseT >= CFG.descendTime){ setState('close'); }
+      if(phaseT >= CFG.descendTime){ setState('close'); Sfx.play('close'); }   // 프롱 닫힘
       break;
     case 'close':
       if(phaseT >= CFG.closeTime){ attemptGrab(); setState('ascend'); }
@@ -704,7 +1141,7 @@ function updateState(dt){
       break;
     case 'drop':
       if(phaseT >= CFG.dropTime){
-        if(held){ const d=held; held=null; grade=null; d.body.wakeUp(); d.body.velocity.set(0,-1,0); d.body.angularVelocity.set(0,0,0); }
+        if(held){ const d=held; held=null; grade=null; d.delivered=true; d.body.wakeUp(); d.body.velocity.set(0,-1,0); d.body.angularVelocity.set(0,0,0); }   // 집게가 chute서 놓음 = 배달
         setState('idle');
       }
       break;
@@ -771,12 +1208,308 @@ document.getElementById('modeBtn').addEventListener('click', async()=>{
   else { await startCameraMode(); }
 });
 
+/* ---------- M5: 과학 용어 데이터 (기본값 TERMS → terms.json → localStorage 편집값) ---------- */
+const Terms = (()=>{
+  const KEY = CFG.termsKey;
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const base = clone(CFG.TERMS);   // 1) 코드 기본값 — 파일 하나로도 동작
+  let file = null;                 // 2) terms.json(있으면)
+  let active = clone(base);        // 최종 병합 결과
+
+  function loadLS(){ try{ const v=localStorage.getItem(KEY); return v?JSON.parse(v):null; }catch(e){ return null; } }
+  function saveLS(set){ try{ localStorage.setItem(KEY, JSON.stringify(set)); }catch(e){} }
+  function clearLS(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  function mergeInto(dst, src){
+    if(!src || typeof src!=='object') return dst;
+    if(typeof src.unit==='string') dst.unit = src.unit;
+    if(src.map && typeof src.map==='object'){
+      for(const k in src.map){
+        const e = src.map[k]; if(!e || typeof e!=='object') continue;
+        const cur = dst.map[k] || {term:'',desc:''};
+        dst.map[k] = { term: e.term!=null?String(e.term):cur.term, desc: e.desc!=null?String(e.desc):cur.desc };
+      }
+    }
+    return dst;
+  }
+  function resolve(){
+    let r = clone(base);
+    if(file) r = mergeInto(r, file);   // 2) 단원 통째 교체
+    const ls = loadLS();
+    if(ls) r = mergeInto(r, ls);       // 3) 편집값 최우선
+    active = r;
+  }
+  resolve();
+  return {
+    get: id => active.map[id] || {term:'', desc:''},
+    unit: () => active.unit || '',
+    all: () => clone(active),
+    setFile(f){ file = f; resolve(); },                 // fetch 결과 반영
+    edit(id, field, val){                               // 편집 → 스냅샷을 LS에 저장(이 기기 최우선)
+      if(!active.map[id]) active.map[id] = {term:'',desc:''};
+      active.map[id][field] = val; saveLS(active);
+    },
+    setUnit(val){ active.unit = val; saveLS(active); },
+    importSet(obj){                                     // 가져오기: 유효성 검사 후 일괄 적용
+      if(!obj || typeof obj!=='object' || (!obj.map && typeof obj.unit!=='string')) throw new Error('형식 오류');
+      const merged = mergeInto(clone(base), file);
+      mergeInto(merged, obj);
+      active = merged; saveLS(active);
+    },
+    reset(){ clearLS(); resolve(); },                   // 기본값/terms.json 복귀
+  };
+})();
+
+/* ---------- 도감(Collection) + localStorage 영속화 ---------- */
+function loadDex(){ try{ return JSON.parse(localStorage.getItem(CFG.dexKey)) || {}; }catch(e){ return {}; } }
+function saveDex(){ try{ localStorage.setItem(CFG.dexKey, JSON.stringify(dex)); }catch(e){} }
+let dex = loadDex();   // { [dollId]: 획득수 }
+
+function rarKo(r){ return r==='unique' ? '유니크' : r==='rare' ? '레어' : '일반'; }
+function recordDex(type){ dex[type.id] = (dex[type.id]||0) + 1; saveDex(); renderDex(); }
+
+const dexPanel = document.getElementById('dexPanel');
+const dexGrid  = document.getElementById('dexGrid');
+const dexProg  = document.getElementById('dexProg');
+const dexUnit  = document.getElementById('dexUnit');
+function htmlEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function renderDex(){
+  let owned = 0;
+  dexGrid.innerHTML = CFG.DOLLS.map(d=>{
+    const ct = dex[d.id]||0, has = ct>0; if(has) owned++;
+    const col = '#'+d.color.toString(16).padStart(6,'0');
+    const t = Terms.get(d.id);
+    const termHtml = (has && t.term) ? `<div class="term">${htmlEsc(t.term)}</div><div class="tdesc">${htmlEsc(t.desc)}</div>` : '';
+    return `<div class="dexCard ${has?d.rarity:'locked'}">
+      <span class="tag ${d.rarity}">${rarKo(d.rarity)}</span>
+      <div class="swatch" style="${has?'background:'+col:''}"></div>
+      <div class="nm">${has?d.name:'???'}</div>
+      <div class="ct">${has?'×'+ct:'미수집'}</div>
+      ${termHtml}
+    </div>`;
+  }).join('');
+  dexProg.textContent = `${owned}/${CFG.DOLLS.length} 수집`;
+  dexUnit.textContent = Terms.unit() || '미설정';
+}
+renderDex();
+document.getElementById('dexBtn').addEventListener('click', ()=>{
+  lessonPanel.classList.remove('on');
+  dexPanel.classList.toggle('on');
+  if(dexPanel.classList.contains('on')) renderDex();
+});
+document.getElementById('dexClose').addEventListener('click', ()=> dexPanel.classList.remove('on'));
+
+/* ---------- M5: 과학 용어 카드 표시 ---------- */
+const termCard = document.getElementById('termCard');
+let termCardTimer = null;
+function showTermCard(id){
+  const t = Terms.get(id);
+  if(!t.term && !t.desc) return;
+  termCard.querySelector('.tcUnit').textContent = Terms.unit();
+  termCard.querySelector('.tcTerm').textContent = t.term || '—';
+  termCard.querySelector('.tcDesc').textContent = t.desc || '';
+  termCard.classList.add('on');
+  clearTimeout(termCardTimer);
+  termCardTimer = setTimeout(()=> termCard.classList.remove('on'), 4200);
+}
+termCard.addEventListener('click', ()=>{ clearTimeout(termCardTimer); termCard.classList.remove('on'); });
+
+/* ---------- M5: 용어 편집 패널(교사용) ---------- */
+const termPanel = document.getElementById('termPanel');
+const termTable = document.getElementById('termTable');
+const termUnitInput = document.getElementById('termUnit');
+function renderTermEditor(){
+  termUnitInput.value = Terms.unit();
+  termTable.innerHTML = '<div class="termHd"><span>인형</span><span>용어</span><span>설명</span></div>' +
+    CFG.DOLLS.map(d=>{
+      const t = Terms.get(d.id);
+      const col = '#'+d.color.toString(16).padStart(6,'0');
+      return `<div class="trow" data-id="${d.id}">
+        <div class="tnm"><span class="tdot" style="background:${col}"></span>${htmlEsc(d.name)}</div>
+        <input class="tterm" data-f="term" value="${htmlEsc(t.term)}" placeholder="용어">
+        <input class="tdesc" data-f="desc" value="${htmlEsc(t.desc)}" placeholder="설명">
+      </div>`;
+    }).join('');
+}
+termTable.addEventListener('input', e=>{
+  const inp = e.target.closest('input'); if(!inp) return;
+  const row = e.target.closest('.trow'); if(!row) return;
+  Terms.edit(row.dataset.id, inp.dataset.f, inp.value);
+  renderDex();   // 즉시 도감 반영
+});
+termUnitInput.addEventListener('input', ()=>{ Terms.setUnit(termUnitInput.value); renderDex(); });
+
+// (M6) 라벨 편집은 시작 화면에서만 — 시작 오버레이의 '라벨 편집' 버튼으로 진입
+document.getElementById('startEditBtn').addEventListener('click', ()=>{
+  if(started) return;   // 게임 진행 중엔 편집 불가
+  renderTermEditor();
+  termPanel.classList.add('on');
+});
+document.getElementById('termClose').addEventListener('click', ()=> termPanel.classList.remove('on'));
+
+document.getElementById('termExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(Terms.all(), null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'terms.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+  toast('terms.json 내보냈어요 ⬇', 'ok', 1700);
+});
+
+const termImportEl = document.getElementById('termImport');
+termImportEl.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      Terms.importSet(JSON.parse(reader.result));
+      renderTermEditor(); renderDex();
+      toast('용어 세트를 불러왔어요 ✅', 'ok', 1900);
+    }catch(err){
+      toast('JSON 형식이 올바르지 않아요 ⚠️', 'bad', 2800);
+    }
+    termImportEl.value = '';
+  };
+  reader.onerror = ()=>{ toast('파일을 읽지 못했어요 ⚠️', 'bad', 2400); termImportEl.value=''; };
+  reader.readAsText(f);
+});
+
+document.getElementById('termReset').addEventListener('click', ()=>{
+  Terms.reset(); renderTermEditor(); renderDex();
+  toast('기본값으로 초기화했어요 ↩️', 'info', 1800);
+});
+
+// (M6) terms.json 자동 fetch 제거 — 기본=빈 라벨. 교사가 편집/가져오기로만 채움.
+
+/* ---------- M2: 확률 수업 모드 (시도/성공/실패 + 누적 성공률 차트) ---------- */
+const lesson = { trials:0, success:0, history:[] };   // history: 각 시행 후 누적 성공률
+const lessonPanel = document.getElementById('lessonPanel');
+const lessonStatsEl = document.getElementById('lessonStats');
+const lessonCanvas = document.getElementById('lessonChart');
+const lessonCtx = lessonCanvas.getContext('2d');
+const lessonPInput = document.getElementById('lessonP');
+const lessonPValEl = document.getElementById('lessonPVal');
+const lessonBtnsEl = document.getElementById('lessonBtns');
+let lessonDpr = 1;
+
+lessonPInput.value = CFG.lessonP;
+function lessonP(){ return parseFloat(lessonPInput.value); }
+
+function updateLessonStats(){
+  const t=lesson.trials, s=lesson.success, f=t-s;
+  const rate = t ? (100*s/t).toFixed(1) : '0.0';
+  lessonStatsEl.innerHTML = `시도 <b>${t}</b> · 성공 <b>${s}</b> · 실패 <b>${f}</b> · 누적 성공률 <b>${rate}%</b>`;
+}
+
+function setupLessonCanvas(){
+  const cssW = lessonCanvas.clientWidth || 480, cssH = 190;
+  lessonDpr = Math.min(devicePixelRatio||1, 2);
+  lessonCanvas.width = cssW*lessonDpr; lessonCanvas.height = cssH*lessonDpr;
+  lessonCanvas.style.height = cssH+'px';
+  lessonCtx.setTransform(lessonDpr,0,0,lessonDpr,0,0);
+  drawChart();
+}
+
+function drawChart(){
+  const w = lessonCanvas.width/lessonDpr, h = lessonCanvas.height/lessonDpr;
+  if(!w) return;
+  const ctx = lessonCtx;
+  ctx.clearRect(0,0,w,h);
+  const padL=30, padR=10, padT=10, padB=16;
+  const gx0=padL, gx1=w-padR, gy0=padT, gy1=h-padB;
+  const X=(i,n)=> n<=1 ? gx0 : gx0 + (gx1-gx0)*(i/(n-1));
+  const Y=(r)=> gy1 - (gy1-gy0)*r;
+  // y 그리드 + 라벨 (0~1)
+  ctx.font='10px sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(const r of [0,0.25,0.5,0.75,1]){
+    const y=Y(r);
+    ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(gx0,y); ctx.lineTo(gx1,y); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.fillText(r.toFixed(2), gx0-4, y);
+  }
+  // 이론확률 p 수평 기준선
+  const p = lessonP(), yp=Y(p);
+  ctx.strokeStyle='rgba(126,240,192,0.9)'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(gx0,yp); ctx.lineTo(gx1,yp); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(126,240,192,0.95)'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+  ctx.fillText('p='+p.toFixed(2), gx0+5, yp-2);
+  // 누적 상대도수 라인
+  const hist = lesson.history, n = hist.length;
+  if(n){
+    ctx.strokeStyle='#ffd56b'; ctx.lineWidth=1.8; ctx.beginPath();
+    for(let i=0;i<n;i++){ const x=X(i,n), y=Y(hist[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.stroke();
+    const lx=X(n-1,n), ly=Y(hist[n-1]);
+    ctx.fillStyle='#ffd56b'; ctx.beginPath(); ctx.arc(lx,ly,2.6,0,Math.PI*2); ctx.fill();
+  }
+  // x축 시행수 표기
+  ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.textAlign='right'; ctx.textBaseline='bottom';
+  ctx.fillText('시행수 '+n, gx1, h-2);
+}
+
+function lessonPush(ok){
+  lesson.trials++; if(ok) lesson.success++;
+  lesson.history.push(lesson.success/lesson.trials);
+}
+// 실제 플레이 1회 기록 → 즉시 갱신
+function lessonRecord(ok){
+  lessonPush(ok);
+  updateLessonStats();
+  if(lessonPanel.classList.contains('on')) drawChart();
+}
+// 자동 시뮬레이션: Bernoulli(p) n회
+function lessonSim(n){
+  const p = lessonP();
+  for(let i=0;i<n;i++) lessonPush(Math.random() < p);
+  updateLessonStats();
+  if(lessonPanel.classList.contains('on')) drawChart();
+}
+function lessonReset(){
+  lesson.trials=0; lesson.success=0; lesson.history.length=0;
+  updateLessonStats(); drawChart();
+}
+
+// 시뮬레이션 버튼 (CFG.simBatch) + 리셋
+CFG.simBatch.forEach(n=>{
+  const b=document.createElement('button'); b.textContent='+'+n;
+  b.addEventListener('click', ()=>lessonSim(n)); lessonBtnsEl.appendChild(b);
+});
+const resetBtn=document.createElement('button');
+resetBtn.textContent='리셋'; resetBtn.className='reset';
+resetBtn.addEventListener('click', lessonReset); lessonBtnsEl.appendChild(resetBtn);
+
+lessonPInput.addEventListener('input', ()=>{ lessonPValEl.textContent=lessonP().toFixed(2); drawChart(); });
+document.getElementById('lessonBtn').addEventListener('click', ()=>{
+  dexPanel.classList.remove('on');
+  lessonPanel.classList.toggle('on');
+  if(lessonPanel.classList.contains('on')) setupLessonCanvas();
+});
+document.getElementById('lessonClose').addEventListener('click', ()=> lessonPanel.classList.remove('on'));
+
+/* ---------- M3: 음소거 토글 (localStorage 영속) ---------- */
+const sfxBtn = document.getElementById('sfxBtn');
+function setSfxLabel(){
+  const on = Sfx.isEnabled();
+  sfxBtn.textContent = on ? '🔊' : '🔇';
+  sfxBtn.classList.toggle('off', !on);
+}
+setSfxLabel();
+sfxBtn.addEventListener('click', ()=>{
+  Sfx.setEnabled(!Sfx.isEnabled());
+  setSfxLabel();
+  if(Sfx.isEnabled()){ Sfx.resume(); Sfx.play('close'); }   // 켤 때 짧은 확인음
+  toast(Sfx.isEnabled() ? '효과음 켜짐 🔊' : '효과음 꺼짐 🔇', 'info', 1100);
+});
+
+lessonPValEl.textContent = lessonP().toFixed(2);
+updateLessonStats();
+
 /* 성공 파티클 버스트 */
 const sparks = [];
-const sparkMat = new THREE.MeshBasicMaterial({color:0x9ff7cf});
-function burst(x,y,z){
-  for(let i=0;i<14;i++){
-    const s=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), sparkMat.clone());
+function burst(x,y,z,color=0x9ff7cf,count=14){
+  for(let i=0;i<count;i++){
+    const s=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,6), new THREE.MeshBasicMaterial({color}));
     s.position.set(x, y, z);
     s.userData.v = new THREE.Vector3((Math.random()-0.5)*4, 3+Math.random()*3, (Math.random()-0.5)*4);
     s.userData.life = 1.0;
@@ -832,9 +1565,23 @@ function animate(){
     const ang = THREE.MathUtils.lerp(OPEN_CLOSED, OPEN_OPEN, openAmount);
     for(const o of openers) o.rotation.z = ang;
 
+    if(!settleDone()){ settleClock += dt; releaseQueued(); }   // 시작 후 시간차 낙하·정착
+
     phaseT += dt;
     updateState(dt);
     updateCable();
+
+    // ---- M4: 타임어택 / 코인 소진 처리 ----
+    if(!gameOver){
+      if(M4.s.timeAttackSec>0){
+        timeLeft -= dt;
+        if(timeLeft<=0){ timeLeft=0; endGame('time'); }
+      }
+      // 코인 0 + 시퀀스가 idle로 복귀하면 마지막 인형 정산 여유(grace) 후 종료
+      if(M4.s.coinMode && coins<=0 && state==='idle' && !held && pendingEnd<0){ pendingEnd = 1.6; }
+      if(pendingEnd>=0){ pendingEnd -= dt; if(pendingEnd<=0){ pendingEnd=-1; endGame('coins'); } }
+      if(M4.s.coinMode || M4.s.timeAttackSec>0) updateMeta();
+    }
 
     // ---- 들고 있는 인형 동기화 ----
     if(held){
@@ -855,11 +1602,28 @@ function animate(){
       d.mesh.position.set(p.x,p.y,p.z);
       d.mesh.quaternion.set(q.x,q.y,q.z,q.w);
       if(d.parked) continue;
-      // chute 구멍 통과 = 점수 (오직 여기서만 +1)
-      if(!d.scored && inChuteArea(p.x,p.z,0) && p.y < 0.25){
-        d.scored = true; score++; failStreak = 0; updateScore();
-        toast('성공! 🎉  +1', 'ok', 1500);
-        burst(CFG.chuteX, 0.4, CFG.chuteZ);
+      // 안전장치: 배달중이 아닌 인형이 케이스 밖으로 나가면 즉시 내부로 클램프
+      if(!d.delivered && p.y > -0.5) clampInside(d);
+      // chute 통과 점수 — 오직 '집게가 배달(delivered)'한 인형 + 정착 끝난 뒤에만 +1
+      if(!d.scored && d.delivered && settleDone() && inChuteArea(p.x,p.z,0) && p.y < 0.25){
+        const rar = d.type.rarity, pts = CFG.RARITY[rar].points;
+        d.scored = true; score += pts; failStreak = 0; updateScore();
+        run.dolls++; run.score += pts; run[rar]++;   // M4: 이번 판 통계
+        run.items[d.type.id] = (run.items[d.type.id]||0) + 1;   // 상품별 획득 개수
+        recordDex(d.type);
+        showTermCard(d.type.id);   // M5: 과학 용어 카드 표시
+        if(d.lessonPending){ d.lessonPending = false; lessonRecord(true); }   // 배출 성공 = 성공 시행
+        Sfx.play(rar); Sfx.vibrate(CFG.HAPTIC[rar]);   // 배출 성공: 희귀도별 성공음 + 햅틱
+        if(rar==='unique'){
+          toast(`✨ 유니크! ${d.type.name} 획득! +${pts}`, 'ok', 2600);
+          burst(CFG.chuteX, 0.4, CFG.chuteZ, 0xffd700, 34);
+        }else if(rar==='rare'){
+          toast(`⭐ 레어 ${d.type.name}! +${pts}`, 'ok', 2000);
+          burst(CFG.chuteX, 0.4, CFG.chuteZ, 0x9fd0ff, 22);
+        }else{
+          toast(`성공! 🎉 ${d.type.name} +${pts}`, 'ok', 1500);
+          burst(CFG.chuteX, 0.4, CFG.chuteZ);
+        }
       }
       // 수거함 도달 → 정적 고정(깔끔히 보관)
       if(d.scored && p.y < binFloorY + 0.5){ parkInBin(d); }
@@ -879,6 +1643,13 @@ function animate(){
   chuteGlowMat.emissiveIntensity = 0.9 + Math.sin(t*3.2)*0.5;
   chuteGlow.intensity = 4 + Math.sin(t*3.2)*2;
 
+  // 유니크 인형 스파클 트윈클
+  for(const g of sparkleGroups){
+    for(const s of g.userData.sparkles){
+      s.scale.setScalar(0.4 + (0.5+0.5*Math.sin(t*5 + s.userData.phase))*0.9);
+    }
+  }
+
   renderer.render(scene, camera);
 }
 animate();
@@ -889,8 +1660,111 @@ animate();
 function beginGame(){
   document.getElementById('overlay').style.display='none';
   started = true;
+  Sfx.resume();   // 첫 사용자 제스처에서 AudioContext resume
+  initRun();
   setModeLabel();
 }
+
+/* ---------- M4: 판(run) 라이프사이클 ---------- */
+const metaEl = document.getElementById('meta');
+function updateMeta(){
+  if(!started || gameOver){ metaEl.classList.remove('on'); return; }
+  const parts = [];
+  if(M4.s.coinMode)        parts.push(`🏪 상점 <b>${coins}</b>`);
+  if(M4.s.timeAttackSec>0) parts.push(`⏱ <b>${Math.ceil(timeLeft)}</b>s`);
+  if(parts.length){ metaEl.innerHTML = parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;'); metaEl.classList.add('on'); }
+  else metaEl.classList.remove('on');
+}
+
+function initRun(){
+  M4.applyPreset();
+  coins = M4.s.startCoins;
+  timeLeft = M4.s.timeAttackSec;
+  gameOver = false; pendingEnd = -1;
+  run.dolls=0; run.score=0; run.common=0; run.rare=0; run.unique=0; run.items={};
+  updateMeta();
+}
+
+function endGame(reason){
+  if(gameOver) return;
+  gameOver = true; pendingEnd = -1;
+  input.pinch = false;
+  updateMeta();
+  const rEl = document.getElementById('result');
+  document.getElementById('resultTitle').textContent = reason==='time' ? '⏱ 시간 종료!' : '🏪 상점 소진!';
+  // 획득 상품 목록(이름/개수) — 라벨 설정돼 있으면 라벨, 아니면 인형 기본 이름
+  const ids = Object.keys(run.items);
+  const itemHtml = ids.length
+    ? ids.map(id=>{
+        const dd = CFG.DOLLS.find(x=>x.id===id);
+        const t = Terms.get(id);
+        const nm = (t && t.term) ? t.term : (dd ? dd.name : id);
+        return `<div class="rsRow">🎁 ${htmlEsc(nm)}<b>${run.items[id]}</b></div>`;
+      }).join('')
+    : `<div class="rsRow">획득한 상품이 없어요</div>`;
+  document.getElementById('resultStats').innerHTML =
+    `<div class="rsBig">획득 상품 <b>${run.dolls}</b> · 점수 <b>${run.score}</b></div>` + itemHtml;
+  rEl.classList.add('on');
+  Sfx.play(run.unique>0 ? 'unique' : 'common');
+}
+
+function resetAllDolls(){
+  parkedCount = 0;
+  settleClock = 0;   // 정착시간 재시작 → 판정 OFF부터
+  for(let i=0;i<dolls.length;i++){
+    const d = dolls[i];
+    d.parked = false; d.scored = false; d.delivered = false; d.lessonPending = false;
+    d.body.velocity.set(0,0,0); d.body.angularVelocity.set(0,0,0);
+    let x,z,tries=0;
+    do{
+      x = THREE.MathUtils.lerp(CFG.spawnX[0]+d.r, CFG.spawnX[1]-d.r, Math.random());
+      z = THREE.MathUtils.lerp(CFG.spawnZ[0]+d.r, CFG.spawnZ[1]-d.r, Math.random());
+    }while(inChuteArea(x,z,0.25) && ++tries<12);
+    d.body.position.set(x, 0.55 + (i%5)*0.4, z);   // 낮게
+    d.body.quaternion.set(0,0,0,1);
+    d.body.type = CANNON.Body.STATIC; d.body.mass = 0; d.body.updateMassProperties();   // 시간차 낙하 대기
+    d.dropAt = i*CFG.dropStagger;
+  }
+}
+
+function restartGame(){
+  document.getElementById('result').classList.remove('on');
+  resetAllDolls();
+  score = 0; updateScore();
+  failStreak = 0;
+  setState('idle'); held = null; grade = null; openAmount = 1;
+  initRun();
+}
+document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+/* ---------- M4: 시작 오버레이 설정 UI ---------- */
+const presetSeg = document.getElementById('presetSeg');
+function paintPreset(){ [...presetSeg.children].forEach(b=> b.classList.toggle('on', b.dataset.v===M4.s.preset)); }
+presetSeg.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{
+  M4.s.preset = b.dataset.v; M4.applyPreset(); M4.save(); paintPreset();
+}));
+paintPreset();
+
+const coinToggle = document.getElementById('coinToggle');
+const coinCount  = document.getElementById('coinCount');
+function paintCoin(){
+  coinToggle.textContent = M4.s.coinMode ? 'ON' : 'OFF';
+  coinToggle.classList.toggle('on', M4.s.coinMode);
+  coinCount.style.display = M4.s.coinMode ? '' : 'none';
+  coinCount.value = M4.s.startCoins;
+}
+coinToggle.addEventListener('click', ()=>{ M4.s.coinMode = !M4.s.coinMode; M4.save(); paintCoin(); });
+coinCount.addEventListener('change', ()=>{
+  M4.s.startCoins = Math.max(1, Math.min(99, parseInt(coinCount.value)||10)); M4.save(); coinCount.value = M4.s.startCoins;
+});
+paintCoin();
+
+const timeInput = document.getElementById('timeInput');
+timeInput.value = M4.s.timeAttackSec;
+timeInput.addEventListener('change', ()=>{
+  M4.s.timeAttackSec = Math.max(0, Math.min(600, parseInt(timeInput.value)||0)); M4.save(); timeInput.value = M4.s.timeAttackSec;
+});
+
 document.getElementById('startMouse').addEventListener('click', ()=>{
   mode='mouse'; beginGame(); toast('마우스·터치 모드로 시작! 🖱️','info',2000);
 });
@@ -905,6 +1779,7 @@ addEventListener('resize', ()=>{
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   placeCamera();
+  if(lessonPanel.classList.contains('on')) setupLessonCanvas();
 });
 
 console.log('[claw] three', THREE.REVISION, '| cannon-es loaded | balls', dolls.length);
