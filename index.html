@@ -214,7 +214,7 @@
   #meta b{color:var(--accent);font-variant-numeric:tabular-nums;font-size:16px}
 
   /* ---------- M4: 시작 오버레이 설정 ---------- */
-  #setup{display:flex;flex-direction:column;gap:11px;width:min(340px,86vw);
+  #setup{display:flex;flex-direction:column;gap:11px;width:min(340px,86vw);max-height:42vh;overflow:auto;
     background:rgba(255,255,255,.04);border:1px solid var(--glass-bd);border-radius:16px;padding:14px 16px}
   .setRow{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600}
   .setLbl{min-width:62px;text-align:left;opacity:.9}
@@ -229,6 +229,10 @@
   .toggle.on{background:var(--accent);color:#06281c;border-color:transparent}
   #setup input[type=number]{width:56px;background:rgba(0,0,0,.25);border:1px solid var(--glass-bd);color:var(--txt);
     padding:6px 8px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;pointer-events:auto}
+  #setup input[type=range]{flex:1;accent-color:var(--accent);height:4px;pointer-events:auto;margin:0 2px;min-width:80px}
+  .setRow.prob .setLbl{min-width:54px;display:flex;align-items:baseline;gap:2px}
+  .setRow.prob .setLbl .setUnit{font-size:10px}
+  .probVal{color:var(--gold);font-variant-numeric:tabular-nums;font-size:13px;min-width:34px;text-align:right}
 
   /* ---------- M4: 결과 화면 ---------- */
   #result{position:fixed;inset:0;z-index:45;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -275,15 +279,14 @@
   <div id="dexGrid"></div>
 </div>
 
-<!-- M5: 과학 용어 편집 패널(교사용) -->
+<!-- M5: 상품 이름(라벨) 편집 패널(교사용) -->
 <div id="termPanel" class="hud">
-  <div class="dexHead">✏️ 과학 용어 편집 <span class="thint">교사용</span><button id="termClose">✕</button></div>
-  <div class="termUnitRow"><label>단원명</label><input id="termUnit" type="text" placeholder="예: 동물과에너지"></div>
+  <div class="dexHead">✏️ 상품 이름 편집 <span class="thint">교사용</span><button id="termClose">✕</button></div>
   <div id="termTable"></div>
   <div class="termBtns">
-    <button id="termExport">⬇ 내보내기 terms.json</button>
+    <button id="termExport">⬇ 내보내기</button>
     <label id="termImportLbl" class="impBtn">⬆ 가져오기<input id="termImport" type="file" accept=".json,application/json" hidden></label>
-    <button id="termReset" class="reset">기본값 초기화</button>
+    <button id="termReset" class="reset">라벨 비우기</button>
   </div>
   <p class="termNote">수정은 자동 저장(이 기기)돼요. 다른 기기엔 <b>내보내기→가져오기</b>로 옮기세요. 코드는 건드리지 않아요.</p>
 </div>
@@ -315,11 +318,40 @@
         <button data-v="boss">사장모드</button>
       </div>
     </div>
+    <div class="setRow prob">
+      <span class="setLbl">FIRM<span class="setUnit"> 확실</span></span>
+      <input id="firmRange" type="range" min="0" max="1" step="0.05">
+      <b id="firmVal" class="probVal">0.35</b>
+    </div>
+    <div class="setRow prob">
+      <span class="setLbl">WEAK<span class="setUnit"> 헐겁</span></span>
+      <input id="weakRange" type="range" min="0" max="1" step="0.05">
+      <b id="weakVal" class="probVal">0.40</b>
+    </div>
+    <div class="setRow prob">
+      <span class="setLbl">TEASE<span class="setUnit"> 약올림</span></span>
+      <span class="setUnit" style="margin-left:auto">자동 = <b id="teaseVal" class="probVal">0.25</b></span>
+    </div>
     <div class="setRow">
-      <span class="setLbl">상점 모드</span>
+      <span class="setLbl">슬립확률</span>
+      <input id="slipInput" type="number" min="0" max="3" step="0.1" inputmode="decimal">
+      <span class="setUnit">/초</span>
+    </div>
+    <div class="setRow">
+      <span class="setLbl">자비</span>
+      <input id="pityInput" type="number" min="0" max="20" step="1" inputmode="numeric">
+      <span class="setUnit">연속실패 시 확정</span>
+    </div>
+    <div class="setRow prob">
+      <span class="setLbl">상품 개수</span>
+      <input id="nBallsRange" type="range" min="1" step="1">
+      <b id="nBallsVal" class="probVal">26</b>
+    </div>
+    <div class="setRow">
+      <span class="setLbl">코인</span>
       <button class="toggle" id="coinToggle">OFF</button>
       <input id="coinCount" type="number" min="1" max="99" value="10" inputmode="numeric">
-      <span class="setUnit">상점</span>
+      <span class="setUnit">코인</span>
     </div>
     <div class="setRow">
       <span class="setLbl">타임어택</span>
@@ -441,21 +473,35 @@ const CFG = {
    M4 — 난이도 프리셋 + 코인/타임어택 설정 (localStorage 영속)
    ============================================================ */
 const M4 = (()=>{
-  const def = { preset:'real', coinMode:CFG.coinMode, startCoins:CFG.startCoins, timeAttackSec:CFG.timeAttackSec };
+  // 기본 = 현실 프리셋 값. 교사가 시작 화면에서 직접 미세조정 가능(localStorage 저장).
+  const r = CFG.PRESETS.real;
+  const def = { preset:'real',
+    grabFirmRate:r.grabFirmRate, grabWeakRate:r.grabWeakRate,
+    weakSlipPerSec:r.weakSlipPerSec, pityThreshold:r.pityThreshold,
+    coinMode:CFG.coinMode, startCoins:CFG.startCoins, timeAttackSec:CFG.timeAttackSec,
+    nBalls:CFG.nBalls };
   let s;
   try{ s = Object.assign({}, def, JSON.parse(localStorage.getItem(CFG.m4Key)) || {}); }catch(e){ s = Object.assign({}, def); }
+  s.nBalls = Math.max(1, Math.min(CFG.nBalls, s.nBalls|0 || CFG.nBalls));   // 상한=CFG.nBalls
   function save(){ try{ localStorage.setItem(CFG.m4Key, JSON.stringify(s)); }catch(e){} }
-  // 선택 프리셋의 확률·악력·pity를 CFG에 일괄 반영(rollGrade/tickGrip가 CFG.*를 live 참조)
+  // 저장된 확률·악력·pity를 CFG에 반영(rollGrade/tickGrip가 CFG.*를 live 참조)
   function applyPreset(){
-    const p = CFG.PRESETS[s.preset] || CFG.PRESETS.real;
-    CFG.grabFirmRate   = p.grabFirmRate;
-    CFG.grabWeakRate   = p.grabWeakRate;
-    CFG.weakSlipPerSec = p.weakSlipPerSec;
-    CFG.pityThreshold  = p.pityThreshold;
+    CFG.grabFirmRate   = s.grabFirmRate;
+    CFG.grabWeakRate   = s.grabWeakRate;
+    CFG.weakSlipPerSec = s.weakSlipPerSec;
+    CFG.pityThreshold  = s.pityThreshold;
   }
-  return { get s(){ return s; }, save, applyPreset };
+  // 프리셋 값을 s에 채움(교사는 여기서 더 미세조정)
+  function loadPreset(name){
+    const p = CFG.PRESETS[name] || CFG.PRESETS.real;
+    s.preset = name;
+    s.grabFirmRate = p.grabFirmRate; s.grabWeakRate = p.grabWeakRate;
+    s.weakSlipPerSec = p.weakSlipPerSec; s.pityThreshold = p.pityThreshold;
+    applyPreset(); save();
+  }
+  return { get s(){ return s; }, save, applyPreset, loadPreset };
 })();
-M4.applyPreset();   // 저장된 프리셋을 시작 시 즉시 적용
+M4.applyPreset();   // 저장된 확률을 시작 시 즉시 적용
 
 /* ============================================================
    M3 — 효과음(Web Audio 합성) + 햅틱
@@ -804,23 +850,44 @@ function spawnDolls(){
       linearDamping:0.25, angularDamping:0.55,
       allowSleep:true, sleepSpeedLimit:0.22, sleepTimeLimit:0.4
     });
-    // chute 코너 제외하고 스폰 (벽에서 반지름 이상 안쪽 = spawnX/Z 가 케이스 내부)
-    let x,z, tries=0;
-    do{
-      x = THREE.MathUtils.lerp(CFG.spawnX[0]+r, CFG.spawnX[1]-r, Math.random());
-      z = THREE.MathUtils.lerp(CFG.spawnZ[0]+r, CFG.spawnZ[1]-r, Math.random());
-    }while(inChuteArea(x,z,0.25) && ++tries<12);
-    body.position.set(x, 0.55 + (i%5)*0.4, z);   // 낮게(깊은 겹침 방지)
-    body.type = CANNON.Body.STATIC; body.mass = 0; body.updateMassProperties();   // 시작 전엔 정지
     world.addBody(body);
-    dolls.push({mesh, body, r, type, scored:false, parked:false, delivered:false, dropAt:i*CFG.dropStagger});
+    dolls.push({mesh, body, r, type, scored:false, parked:false, delivered:false, inactive:false, dropAt:null});
   }
-  for(const d of dolls) d.mesh.position.copy(d.body.position);   // 첫 프레임 메쉬 동기화
 }
 spawnDolls();
 
 /* 시작 후 살짝 시간차로 인형 낙하 (static→dynamic 순차) + 정착시간 동안 판정 OFF */
 let settleClock = 0;
+let parkedCount = 0;
+let activeCount = Math.min(M4.s.nBalls, CFG.nBalls);   // 교사가 정한 상품 개수(상한=CFG.nBalls)
+
+// 인형 배치: 활성 개수만 케이스 안에 시간차 낙하 대기, 나머지는 숨김(비활성)
+function layoutDolls(){
+  parkedCount = 0; settleClock = 0;
+  for(let i=0;i<dolls.length;i++){
+    const d = dolls[i];
+    d.parked = false; d.scored = false; d.delivered = false; d.lessonPending = false;
+    d.body.velocity.set(0,0,0); d.body.angularVelocity.set(0,0,0);
+    d.body.type = CANNON.Body.STATIC; d.body.mass = 0; d.body.updateMassProperties();
+    d.body.quaternion.set(0,0,0,1);
+    if(i < activeCount){
+      d.inactive = false; d.mesh.visible = true;
+      let x,z, tries=0;
+      do{
+        x = THREE.MathUtils.lerp(CFG.spawnX[0]+d.r, CFG.spawnX[1]-d.r, Math.random());
+        z = THREE.MathUtils.lerp(CFG.spawnZ[0]+d.r, CFG.spawnZ[1]-d.r, Math.random());
+      }while(inChuteArea(x,z,0.25) && ++tries<12);
+      d.body.position.set(x, 0.55 + (i%5)*0.4, z);   // 낮게(깊은 겹침 방지)
+      d.dropAt = i*CFG.dropStagger;                  // 시간차 낙하
+    }else{
+      d.inactive = true; d.mesh.visible = false;     // 숨김 + 충돌 안 하게 케이스 밖 아래로
+      d.body.position.set(0, -60, 0);
+      d.dropAt = null;
+    }
+    d.mesh.position.copy(d.body.position);
+  }
+}
+layoutDolls();
 function releaseQueued(){
   for(const d of dolls){
     if(d.dropAt==null || settleClock < d.dropAt) continue;
@@ -842,8 +909,7 @@ function clampInside(d){
   }
 }
 
-// 수거함 안에 정적 고정(점수 인형 깔끔히 쌓기)
-let parkedCount = 0;
+// 수거함 안에 정적 고정(점수 인형 깔끔히 쌓기)  ※ parkedCount는 위에서 선언
 function parkInBin(d){
   d.parked = true;
   const n = parkedCount++, slot = n % 4, layer = Math.floor(n/4);
@@ -1062,7 +1128,7 @@ function pickNearest(){
   let best=null, bestD=CFG.grabRadius;
   const cx=claw.position.x, cz=claw.position.z;
   for(const d of dolls){
-    if(d===held || d.parked) continue;
+    if(d===held || d.parked || d.inactive) continue;
     const p=d.body.position;
     const dist = Math.hypot(p.x-cx, p.z-cz);
     if(dist < bestD && Math.abs(p.y - CFG.grabY) < 1.2){ bestD=dist; best=d; }
@@ -1288,7 +1354,8 @@ function renderDex(){
     </div>`;
   }).join('');
   dexProg.textContent = `${owned}/${CFG.DOLLS.length} 수집`;
-  dexUnit.textContent = Terms.unit() || '미설정';
+  const u = Terms.unit();
+  dexUnit.textContent = u; dexUnit.style.display = u ? '' : 'none';   // 세트명 있을 때만 표시
 }
 renderDex();
 document.getElementById('dexBtn').addEventListener('click', ()=>{
@@ -1316,16 +1383,14 @@ termCard.addEventListener('click', ()=>{ clearTimeout(termCardTimer); termCard.c
 /* ---------- M5: 용어 편집 패널(교사용) ---------- */
 const termPanel = document.getElementById('termPanel');
 const termTable = document.getElementById('termTable');
-const termUnitInput = document.getElementById('termUnit');
 function renderTermEditor(){
-  termUnitInput.value = Terms.unit();
-  termTable.innerHTML = '<div class="termHd"><span>인형</span><span>용어</span><span>설명</span></div>' +
+  termTable.innerHTML = '<div class="termHd"><span>인형</span><span>상품</span><span>설명</span></div>' +
     CFG.DOLLS.map(d=>{
       const t = Terms.get(d.id);
       const col = '#'+d.color.toString(16).padStart(6,'0');
       return `<div class="trow" data-id="${d.id}">
         <div class="tnm"><span class="tdot" style="background:${col}"></span>${htmlEsc(d.name)}</div>
-        <input class="tterm" data-f="term" value="${htmlEsc(t.term)}" placeholder="용어">
+        <input class="tterm" data-f="term" value="${htmlEsc(t.term)}" placeholder="상품">
         <input class="tdesc" data-f="desc" value="${htmlEsc(t.desc)}" placeholder="설명">
       </div>`;
     }).join('');
@@ -1336,7 +1401,6 @@ termTable.addEventListener('input', e=>{
   Terms.edit(row.dataset.id, inp.dataset.f, inp.value);
   renderDex();   // 즉시 도감 반영
 });
-termUnitInput.addEventListener('input', ()=>{ Terms.setUnit(termUnitInput.value); renderDex(); });
 
 // (M6) 라벨 편집은 시작 화면에서만 — 시작 오버레이의 '라벨 편집' 버튼으로 진입
 document.getElementById('startEditBtn').addEventListener('click', ()=>{
@@ -1350,10 +1414,10 @@ document.getElementById('termExport').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(Terms.all(), null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'terms.json';
+  a.href = url; a.download = 'products.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=> URL.revokeObjectURL(url), 1000);
-  toast('terms.json 내보냈어요 ⬇', 'ok', 1700);
+  toast('상품 목록을 내보냈어요 ⬇', 'ok', 1700);
 });
 
 const termImportEl = document.getElementById('termImport');
@@ -1364,7 +1428,7 @@ termImportEl.addEventListener('change', e=>{
     try{
       Terms.importSet(JSON.parse(reader.result));
       renderTermEditor(); renderDex();
-      toast('용어 세트를 불러왔어요 ✅', 'ok', 1900);
+      toast('상품 목록을 불러왔어요 ✅', 'ok', 1900);
     }catch(err){
       toast('JSON 형식이 올바르지 않아요 ⚠️', 'bad', 2800);
     }
@@ -1376,7 +1440,7 @@ termImportEl.addEventListener('change', e=>{
 
 document.getElementById('termReset').addEventListener('click', ()=>{
   Terms.reset(); renderTermEditor(); renderDex();
-  toast('기본값으로 초기화했어요 ↩️', 'info', 1800);
+  toast('라벨을 모두 비웠어요 ↩️', 'info', 1800);
 });
 
 // (M6) terms.json 자동 fetch 제거 — 기본=빈 라벨. 교사가 편집/가져오기로만 채움.
@@ -1597,7 +1661,7 @@ function animate(){
 
     // ---- 메쉬 동기화 + chute 통과 점수 + 수거함 정리 ----
     for(const d of dolls){
-      if(d===held) continue;
+      if(d===held || d.inactive) continue;
       const p=d.body.position, q=d.body.quaternion;
       d.mesh.position.set(p.x,p.y,p.z);
       d.mesh.quaternion.set(q.x,q.y,q.z,q.w);
@@ -1678,6 +1742,8 @@ function updateMeta(){
 
 function initRun(){
   M4.applyPreset();
+  activeCount = Math.min(M4.s.nBalls, CFG.nBalls);   // 교사가 정한 상품 개수 반영
+  layoutDolls();                                     // 활성 개수만 시간차 낙하 대기
   coins = M4.s.startCoins;
   timeLeft = M4.s.timeAttackSec;
   gameOver = false; pendingEnd = -1;
@@ -1708,28 +1774,8 @@ function endGame(reason){
   Sfx.play(run.unique>0 ? 'unique' : 'common');
 }
 
-function resetAllDolls(){
-  parkedCount = 0;
-  settleClock = 0;   // 정착시간 재시작 → 판정 OFF부터
-  for(let i=0;i<dolls.length;i++){
-    const d = dolls[i];
-    d.parked = false; d.scored = false; d.delivered = false; d.lessonPending = false;
-    d.body.velocity.set(0,0,0); d.body.angularVelocity.set(0,0,0);
-    let x,z,tries=0;
-    do{
-      x = THREE.MathUtils.lerp(CFG.spawnX[0]+d.r, CFG.spawnX[1]-d.r, Math.random());
-      z = THREE.MathUtils.lerp(CFG.spawnZ[0]+d.r, CFG.spawnZ[1]-d.r, Math.random());
-    }while(inChuteArea(x,z,0.25) && ++tries<12);
-    d.body.position.set(x, 0.55 + (i%5)*0.4, z);   // 낮게
-    d.body.quaternion.set(0,0,0,1);
-    d.body.type = CANNON.Body.STATIC; d.body.mass = 0; d.body.updateMassProperties();   // 시간차 낙하 대기
-    d.dropAt = i*CFG.dropStagger;
-  }
-}
-
 function restartGame(){
   document.getElementById('result').classList.remove('on');
-  resetAllDolls();
   score = 0; updateScore();
   failStreak = 0;
   setState('idle'); held = null; grade = null; openAmount = 1;
@@ -1741,9 +1787,49 @@ document.getElementById('restartBtn').addEventListener('click', restartGame);
 const presetSeg = document.getElementById('presetSeg');
 function paintPreset(){ [...presetSeg.children].forEach(b=> b.classList.toggle('on', b.dataset.v===M4.s.preset)); }
 presetSeg.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{
-  M4.s.preset = b.dataset.v; M4.applyPreset(); M4.save(); paintPreset();
+  M4.loadPreset(b.dataset.v);   // 프리셋 값으로 채움(거기서 더 미세조정 가능)
+  paintPreset(); paintTuning();
 }));
-paintPreset();
+
+/* ---------- 교사 직접 확률 조절 (FIRM/WEAK/TEASE·슬립·자비) + 상품 개수 ---------- */
+const firmRange=document.getElementById('firmRange'), firmVal=document.getElementById('firmVal');
+const weakRange=document.getElementById('weakRange'), weakVal=document.getElementById('weakVal');
+const teaseVal=document.getElementById('teaseVal');
+const slipInput=document.getElementById('slipInput'), pityInput=document.getElementById('pityInput');
+const nBallsRange=document.getElementById('nBallsRange'), nBallsVal=document.getElementById('nBallsVal');
+nBallsRange.max = CFG.nBalls;   // 상한 = 현재 인형 수
+
+function paintTuning(){
+  const f=+M4.s.grabFirmRate, w=+M4.s.grabWeakRate;
+  firmRange.value=f; firmVal.textContent=f.toFixed(2);
+  weakRange.value=w; weakVal.textContent=w.toFixed(2);
+  teaseVal.textContent=Math.max(0,1-f-w).toFixed(2);
+  slipInput.value=M4.s.weakSlipPerSec; pityInput.value=M4.s.pityThreshold;
+  nBallsRange.value=M4.s.nBalls; nBallsVal.textContent=M4.s.nBalls;
+}
+// 수동 조절 시 preset은 'custom'(하이라이트 해제) + 즉시 CFG 반영·저장
+function tuneSet(field,val){ M4.s[field]=val; M4.s.preset='custom'; M4.applyPreset(); M4.save(); }
+firmRange.addEventListener('input', ()=>{
+  let f=+firmRange.value;
+  if(f + (+M4.s.grabWeakRate) > 1) M4.s.grabWeakRate = +(Math.max(0,1-f)).toFixed(2);   // 합 1 넘으면 WEAK 줄임
+  tuneSet('grabFirmRate', f); paintTuning(); paintPreset();
+});
+weakRange.addEventListener('input', ()=>{
+  let w=+weakRange.value;
+  if((+M4.s.grabFirmRate) + w > 1) w = +(Math.max(0,1-M4.s.grabFirmRate)).toFixed(2);
+  weakRange.value=w; tuneSet('grabWeakRate', w); paintTuning(); paintPreset();
+});
+slipInput.addEventListener('change', ()=>{
+  tuneSet('weakSlipPerSec', Math.max(0,Math.min(3, parseFloat(slipInput.value)||0))); paintTuning(); paintPreset();
+});
+pityInput.addEventListener('change', ()=>{
+  tuneSet('pityThreshold', Math.max(0,Math.min(20, parseInt(pityInput.value)||0))); paintTuning(); paintPreset();
+});
+nBallsRange.addEventListener('input', ()=>{
+  M4.s.nBalls = Math.max(1, Math.min(CFG.nBalls, parseInt(nBallsRange.value)||CFG.nBalls));
+  M4.save(); nBallsVal.textContent=M4.s.nBalls;
+});
+paintPreset(); paintTuning();
 
 const coinToggle = document.getElementById('coinToggle');
 const coinCount  = document.getElementById('coinCount');
