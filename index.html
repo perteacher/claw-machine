@@ -21,12 +21,14 @@
 
   /* ---------- HUD ---------- */
   .hud{position:fixed;z-index:20;pointer-events:none}
-  #counter{top:max(14px,env(safe-area-inset-top));left:14px;
+  #counter{top:max(14px,env(safe-area-inset-top));left:14px;pointer-events:auto;cursor:pointer;
     background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     padding:10px 16px;border-radius:16px;font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;
     box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+  #counter:active{transform:scale(.96)}
   #counter b{color:var(--accent);font-size:20px;font-variant-numeric:tabular-nums}
   #counter .ic{font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  #counter .caret{font-size:11px;opacity:.55;margin-left:1px}
 
   #hint{left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);
     background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -246,16 +248,24 @@
     background:rgba(255,255,255,.05);border:1px solid var(--glass-bd);border-radius:16px;padding:18px 26px;min-width:min(300px,82vw)}
   #resultStats .rsBig{font-size:17px;font-weight:800;margin-bottom:4px}
   #resultStats .rsBig b{color:var(--accent);font-variant-numeric:tabular-nums;font-size:21px}
-  #resultStats .rsRow{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;min-width:160px}
-  #resultStats .rsRow .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
-  #resultStats .rsRow b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--accent)}
+  .rsRow{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;min-width:160px}
+  .rsRow .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
+  .rsRow b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--accent)}
+
+  /* 획득 상품 목록 패널(좌상단 카운터 클릭) */
+  #prizePanel{display:none;position:fixed;z-index:30;left:14px;top:calc(max(14px,env(safe-area-inset-top)) + 52px);
+    width:min(360px,86vw);max-height:72vh;overflow:auto;pointer-events:auto;
+    background:var(--glass);border:1px solid var(--glass-bd);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-radius:18px;padding:16px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  #prizePanel.on{display:block}
+  #prizeList{display:flex;flex-direction:column;gap:8px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 
 <!-- HUD -->
-<div id="counter" class="hud"><span class="ic">🧸</span> 담은 인형 <b id="score">0</b></div>
+<div id="counter" class="hud" title="누르면 획득한 상품 목록"><span class="ic">🧸</span> 상품 <b id="score">0</b> <span class="caret">▾</span></div>
 <div id="meta" class="hud"></div>
 <button id="modeBtn" class="hud">🖐 <span id="modeLbl">모드</span></button>
 <button id="dexBtn" class="hud">📖 <span>도감</span></button>
@@ -270,6 +280,12 @@
   <div class="tcTerm"></div>
   <div class="tcDesc"></div>
   <div class="tcHint">탭하면 닫혀요</div>
+</div>
+
+<!-- 획득 상품 목록 패널(좌상단 카운터 클릭, 열람 전용) -->
+<div id="prizePanel" class="hud">
+  <div class="dexHead">🎁 획득한 상품 <span id="prizeProg"></span><button id="prizeClose">✕</button></div>
+  <div id="prizeList"></div>
 </div>
 
 <!-- 도감 패널 -->
@@ -399,7 +415,7 @@ import * as CANNON from 'cannon-es';
 const CFG = {
   // 유리 케이스 내부
   caseX:[-2.5, 2.5], caseZ:[-2.0, 2.0], caseH:3.6,
-  roofOpacity:0.4,   // 빨간 지붕 반투명도(안쪽 집게·인형 비치게). 0=완전투명, 1=불투명
+  roofOpacity:0.2,   // 빨간 지붕 반투명도(빨간 느낌만 살짝 남기고 안쪽 잘 비치게). 0=완전투명, 1=불투명
   // 카메라 시점 (위에서 살짝 더 내려다봐 집게 XZ가 지붕 뒤로 안 숨게)
   cam:{ fov:48, lookY:1.4,
         portrait:{ height:10.6, dist:11.4 },
@@ -1344,6 +1360,25 @@ let dex = loadDex();   // { [dollId]: 획득수 }
 function rarKo(r){ return r==='unique' ? '유니크' : r==='rare' ? '레어' : '일반'; }
 function recordDex(type){ dex[type.id] = (dex[type.id]||0) + 1; saveDex(); renderDex(); }
 
+// 획득 상품 목록 HTML(이름=라벨 또는 기본 이름, 희귀도 태그, 개수). 카운터 패널·결과화면 공용.
+function prizeListHtml(items){
+  const ids = Object.keys(items||{}).filter(id=> items[id]>0);
+  if(!ids.length) return `<div class="rsRow">아직 뽑은 상품이 없어요</div>`;
+  const rank = {unique:0, rare:1, common:2};
+  ids.sort((a,b)=>{
+    const da=CFG.DOLLS.find(x=>x.id===a), db=CFG.DOLLS.find(x=>x.id===b);
+    const ra=da?rank[da.rarity]:9, rb=db?rank[db.rarity]:9;
+    return ra-rb;
+  });
+  return ids.map(id=>{
+    const dd = CFG.DOLLS.find(x=>x.id===id);
+    const t = Terms.get(id);
+    const nm = (t && t.term) ? t.term : (dd ? dd.name : id);
+    const rar = dd ? dd.rarity : 'common';
+    return `<div class="rsRow"><span class="tag ${rar}">${rarKo(rar)}</span> ${htmlEsc(nm)}<b>${items[id]}</b></div>`;
+  }).join('');
+}
+
 const dexPanel = document.getElementById('dexPanel');
 const dexGrid  = document.getElementById('dexGrid');
 const dexProg  = document.getElementById('dexProg');
@@ -1375,6 +1410,22 @@ document.getElementById('dexBtn').addEventListener('click', ()=>{
   if(dexPanel.classList.contains('on')) renderDex();
 });
 document.getElementById('dexClose').addEventListener('click', ()=> dexPanel.classList.remove('on'));
+
+/* ---------- 획득 상품 목록 패널(카운터 클릭, 열람 전용) ---------- */
+const prizePanel = document.getElementById('prizePanel');
+function renderPrizes(){
+  document.getElementById('prizeList').innerHTML = prizeListHtml(run.items);
+  const total = Object.values(run.items||{}).reduce((a,b)=>a+b,0);
+  document.getElementById('prizeProg').textContent = total ? `${total}개` : '';
+}
+document.getElementById('counter').addEventListener('click', ()=>{
+  prizePanel.classList.toggle('on');
+  if(prizePanel.classList.contains('on')){
+    dexPanel.classList.remove('on'); lessonPanel.classList.remove('on');
+    renderPrizes();
+  }
+});
+document.getElementById('prizeClose').addEventListener('click', e=>{ e.stopPropagation(); prizePanel.classList.remove('on'); });
 
 /* ---------- M5: 과학 용어 카드 표시 ---------- */
 const termCard = document.getElementById('termCard');
@@ -1745,7 +1796,7 @@ const metaEl = document.getElementById('meta');
 function updateMeta(){
   if(!started || gameOver){ metaEl.classList.remove('on'); return; }
   const parts = [];
-  if(M4.s.coinMode)        parts.push(`🏪 상점 <b>${coins}</b>`);
+  if(M4.s.coinMode)        parts.push(`🪙 코인 <b>${coins}</b>`);
   if(M4.s.timeAttackSec>0) parts.push(`⏱ <b>${Math.ceil(timeLeft)}</b>s`);
   if(parts.length){ metaEl.innerHTML = parts.join('&nbsp;&nbsp;·&nbsp;&nbsp;'); metaEl.classList.add('on'); }
   else metaEl.classList.remove('on');
@@ -1768,17 +1819,9 @@ function endGame(reason){
   input.pinch = false;
   updateMeta();
   const rEl = document.getElementById('result');
-  document.getElementById('resultTitle').textContent = reason==='time' ? '⏱ 시간 종료!' : '🏪 상점 소진!';
-  // 획득 상품 목록(이름/개수) — 라벨 설정돼 있으면 라벨, 아니면 인형 기본 이름
-  const ids = Object.keys(run.items);
-  const itemHtml = ids.length
-    ? ids.map(id=>{
-        const dd = CFG.DOLLS.find(x=>x.id===id);
-        const t = Terms.get(id);
-        const nm = (t && t.term) ? t.term : (dd ? dd.name : id);
-        return `<div class="rsRow">🎁 ${htmlEsc(nm)}<b>${run.items[id]}</b></div>`;
-      }).join('')
-    : `<div class="rsRow">획득한 상품이 없어요</div>`;
+  document.getElementById('resultTitle').textContent = reason==='time' ? '⏱ 시간 종료!' : '🪙 코인 소진!';
+  // 획득 상품 목록(이름/개수/희귀도) — 카운터 패널과 동일 표시 형식 재사용
+  const itemHtml = prizeListHtml(run.items);
   document.getElementById('resultStats').innerHTML =
     `<div class="rsBig">획득 상품 <b>${run.dolls}</b> · 점수 <b>${run.score}</b></div>` + itemHtml;
   rEl.classList.add('on');
