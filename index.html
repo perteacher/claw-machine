@@ -399,6 +399,11 @@ import * as CANNON from 'cannon-es';
 const CFG = {
   // 유리 케이스 내부
   caseX:[-2.5, 2.5], caseZ:[-2.0, 2.0], caseH:3.6,
+  roofOpacity:0.4,   // 빨간 지붕 반투명도(안쪽 집게·인형 비치게). 0=완전투명, 1=불투명
+  // 카메라 시점 (위에서 살짝 더 내려다봐 집게 XZ가 지붕 뒤로 안 숨게)
+  cam:{ fov:48, lookY:1.4,
+        portrait:{ height:10.6, dist:11.4 },
+        landscape:{ height:8.4, dist:8.8 } },
   // 집게 도달 범위 (케이스 안쪽, 인형 반경 고려)
   clawX:[-2.2, 2.2], clawZ:[-1.7, 1.7],
   restY:3.2, grabY:0.5, topY:4.6,
@@ -585,11 +590,12 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x07080f);
 scene.fog = new THREE.Fog(0x07080f, 16, 34);
 
-const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(CFG.cam.fov, innerWidth/innerHeight, 0.1, 100);
 function placeCamera(){
   const portrait = innerHeight > innerWidth;
-  camera.position.set(0, portrait?8.6:6.6, portrait?12.6:9.8);
-  camera.lookAt(0, 1.2, 0);
+  const c = portrait ? CFG.cam.portrait : CFG.cam.landscape;
+  camera.position.set(0, c.height, c.dist);
+  camera.lookAt(0, CFG.cam.lookY, 0);
 }
 placeCamera();
 
@@ -640,6 +646,11 @@ const cabinet = new THREE.Group(); scene.add(cabinet);
 
 const matRed   = new THREE.MeshStandardMaterial({color:0xd8392f, roughness:0.5, metalness:0.1});
 const matRedDk = new THREE.MeshStandardMaterial({color:0xa3271f, roughness:0.55, metalness:0.1});
+// 지붕 전용 반투명 재질(빨간 외형 유지하되 안쪽 집게·인형 비치게) — depthWrite off로 뒤가 비침
+const matRoof   = new THREE.MeshStandardMaterial({color:0xd8392f, roughness:0.5, metalness:0.1,
+  transparent:true, opacity:CFG.roofOpacity, depthWrite:false, side:THREE.DoubleSide});
+const matRoofDk = new THREE.MeshStandardMaterial({color:0xa3271f, roughness:0.55, metalness:0.1,
+  transparent:true, opacity:CFG.roofOpacity, depthWrite:false, side:THREE.DoubleSide});
 const matWhite = new THREE.MeshStandardMaterial({color:0xf2f2f5, roughness:0.5, metalness:0.1});
 const matBase  = new THREE.MeshStandardMaterial({color:0x2a1c2e, roughness:0.7, metalness:0.1});
 const matGlass = new THREE.MeshStandardMaterial({color:0xaecbff, roughness:0.06, metalness:0.0,
@@ -652,9 +663,9 @@ function boxMesh(w,h,d,x,y,z,m,shadow){
   cabinet.add(me); return me;
 }
 
-// 빨간 지붕(top)
-boxMesh((cx1-cx0)+0.6, 0.5, (cz1-cz0)+0.6, 0, cH+0.25, 0, matRed, true);
-boxMesh((cx1-cx0)+0.2, 0.16, (cz1-cz0)+0.2, 0, cH+0.55, 0, matRedDk, false);
+// 빨간 지붕(top) — 반투명(matRoof): 위에서 봤을 때 안쪽 집게·인형이 비침
+boxMesh((cx1-cx0)+0.6, 0.5, (cz1-cz0)+0.6, 0, cH+0.25, 0, matRoof, false);
+boxMesh((cx1-cx0)+0.2, 0.16, (cz1-cz0)+0.2, 0, cH+0.55, 0, matRoofDk, false);
 // 상단 프레임 트림(빨강)
 boxMesh((cx1-cx0)+0.2, 0.12, 0.12, 0, cH, cz1, matRed, false);
 boxMesh((cx1-cx0)+0.2, 0.12, 0.12, 0, cH, cz0, matRed, false);
